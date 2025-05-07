@@ -1,0 +1,347 @@
+-- Insert 30 authors into bookstore_tacgia
+INSERT INTO bookstore_tacgia (MaTG, TenTG) VALUES
+(1, 'Nguyễn Nhật Ánh'),
+(2, 'Tô Hoài'),
+(3, 'Nam Cao'),
+(4, 'Vũ Trọng Phụng'),
+(5, 'Haruki Murakami'),
+(6, 'J.K. Rowling'),
+(7, 'Gabriel García Márquez'),
+(8, 'Jane Austen'),
+(9, 'Ernest Hemingway'),
+(10, 'Agatha Christie'),
+(11, 'Stephen King'),
+(12, 'George Orwell'),
+(13, 'Yuval Noah Harari'),
+(14, 'Malcolm Gladwell'),
+(15, 'Ngô Tất Tố'),
+(16, 'Trần Đăng Khoa'),
+(17, 'Nguyễn Du'),
+(18, 'Hồ Chí Minh'),
+(19, 'Xuân Diệu'),
+(20, 'Hàn Mặc Tử'),
+(21, 'Paulo Coelho'),
+(22, 'Victor Hugo'),
+(23, 'Leo Tolstoy'),
+(24, 'Fyodor Dostoevsky'),
+(25, 'Mark Twain'),
+(26, 'Trịnh Công Sơn'),
+(27, 'Nguyễn Đình Thi'),
+(28, 'Phan Bội Châu'),
+(29, 'Nguyễn Công Hoan'),
+(30, 'Bùi Giáng');
+
+select * from bookstore_tacgia;
+
+-- Insert 30 book titles into bookstore_dausach, each linked to a genre
+INSERT INTO bookstore_dausach (MaDauSach, TenSach, MaTheLoai_id) VALUES
+(1, 'Cho Tôi Xin Một Vé Đi Tuổi Thơ', 23),
+(2, 'Dế Mèn Phiêu Lưu Ký', 23),
+(3, 'Lão Hạc', 14),
+(4, 'Số Đỏ', 14),
+(5, 'Rừng Na Uy', 7),
+(6, 'Harry Potter và Hòn Đá Phù Thủy', 2),
+(7, 'Trăm Năm Cô Đơn', 14),
+(8, 'Kiêu Hãnh và Định Kiến', 7),
+(9, 'Ông Già và Biển Cả', 14),
+(10, 'Án Mạng Trên Chuyến Tàu Tốc Hành Phương Đông', 6),
+(11, 'Carrie', 5),
+(12, '1984', 2),
+(13, 'Sapiens: Lược Sử Loài Người', 3),
+(14, 'Điểm Bùng Phát', 12),
+(15, 'Tắt Đèn', 14),
+(16, 'Từ Ấy', 15),
+(17, 'Truyện Kiều', 14),
+(18, 'Nhật Ký Trong Tù', 15),
+(19, 'Thơ Xuân Diệu', 15),
+(20, 'Thơ Hàn Mặc Tử', 15),
+(21, 'Nhà Giả Kim', 13),
+(22, 'Những Người Khốn Khổ', 14),
+(23, 'Chiến Tranh và Hòa Bình', 14),
+(24, 'Tội Ác và Hình Phạt', 14),
+(25, 'Cuộc Phiêu Lưu Của Tom Sawyer', 23),
+(26, 'Dấu Chân Trên Cát', 15),
+(27, 'Đất Nước', 15),
+(28, 'Ngục Trung Nhật Ký', 15),
+(29, 'Bước Đường Cùng', 14),
+(30, 'Lá Xanh', 15);
+
+select * from bookstore_dausach;
+
+
+INSERT INTO bookstore_dausach_tacgia (MaDauSach_id, MaTG_id) VALUES
+-- Original 30 records (one author per book)
+(1, 1),   -- Cho Tôi Xin Một Vé Đi Tuổi Thơ - Nguyễn Nhật Ánh
+(2, 2),   -- Dế Mèn Phiêu Lưu Ký - Tô Hoài
+(3, 3),   -- Lão Hạc - Nam Cao
+(4, 4),   -- Số Đỏ - Vũ Trọng Phụng
+(5, 5),   -- Rừng Na Uy - Haruki Murakami
+(6, 6),   -- Harry Potter - J.K. Rowling
+(7, 7),   -- Trăm Năm Cô Đơn - Gabriel García Márquez
+(8, 8),   -- Kiêu Hãnh và Định Kiến - Jane Austen
+(9, 9),   -- Ông Già và Biển Cả - Ernest Hemingway
+(10, 10), -- Án Mạng Trên Chuyến Tàu - Agatha Christie
+(11, 11), -- Carrie - Stephen King
+(12, 12), -- 1984 - George Orwell
+(13, 13), -- Sapiens - Yuval Noah Harari
+(14, 14), -- Điểm Bùng Phát - Malcolm Gladwell
+(15, 15), -- Tắt Đèn - Ngô Tất Tố
+(16, 16), -- Từ Ấy - Trần Đăng Khoa
+(17, 17), -- Truyện Kiều - Nguyễn Du
+(18, 18), -- Nhật Ký Trong Tù - Hồ Chí Minh
+(19, 19), -- Thơ Xuân Diệu - Xuân Diệu
+(20, 20), -- Thơ Hàn Mặc Tử - Hàn Mặc Tử
+(21, 21), -- Nhà Giả Kim - Paulo Coelho
+(22, 22), -- Những Người Khốn Khổ - Victor Hugo
+(23, 23), -- Chiến Tranh và Hòa Bình - Leo Tolstoy
+(24, 24), -- Tội Ác và Hình Phạt - Fyodor Dostoevsky
+(25, 25), -- Cuộc Phiêu Lưu Của Tom Sawyer - Mark Twain
+(26, 26), -- Dấu Chân Trên Cát - Trịnh Công Sơn
+(27, 27), -- Đất Nước - Nguyễn Đình Thi
+(28, 28), -- Ngục Trung Nhật Ký - Phan Bội Châu
+(29, 29), -- Bước Đường Cùng - Nguyễn Công Hoan
+(30, 30), -- Lá Xanh - Bùi Giáng
+-- Additional records for multiple authors
+(1, 16),  -- Cho Tôi Xin Một Vé Đi Tuổi Thơ - Add Trần Đăng Khoa (youth literature)
+(5, 7),   -- Rừng Na Uy - Add Gabriel García Márquez (literary fiction collaboration)
+(6, 11),  -- Harry Potter - Add Stephen King (fantasy/horror crossover)
+(7, 24),  -- Trăm Năm Cô Đơn - Add Fyodor Dostoevsky (deep literary work)
+(10, 6),  -- Án Mạng Trên Chuyến Tàu - Add J.K. Rowling (mystery with creative twist)
+(12, 13), -- 1984 - Add Yuval Noah Harari (dystopian and historical insight)
+(13, 14), -- Sapiens - Add Malcolm Gladwell (popular science collaboration)
+(15, 3),  -- Tắt Đèn - Add Nam Cao (Vietnamese realist literature)
+(17, 19), -- Truyện Kiều - Add Xuân Diệu (poetic influence)
+(21, 5),  -- Nhà Giả Kim - Add Haruki Murakami (philosophical fiction)
+(22, 23), -- Những Người Khốn Khổ - Add Leo Tolstoy (epic literature)
+(23, 22), -- Chiến Tranh và Hòa Bình - Add Victor Hugo (epic collaboration)
+(24, 7),  -- Tội Ác và Hình Phạt - Add Gabriel García Márquez (literary depth)
+(25, 8),  -- Cuộc Phiêu Lưu Của Tom Sawyer - Add Jane Austen (classic storytelling)
+(29, 15); -- Bước Đường Cùng - Add Ngô Tất Tố (Vietnamese social realism)
+
+select * from bookstore_dausach_tacgia;
+
+INSERT INTO bookstore_sach (MaSach, MaDauSach_id, NXB, NamXB, SLTon) VALUES
+(1, 1, 'NXB Kim Đồng', 2010, 50),   -- Cho Tôi Xin Một Vé Đi Tuổi Thơ
+(2, 1, 'NXB Trẻ', 2018, 30),         -- Cho Tôi Xin Một Vé Đi Tuổi Thơ (reprint)
+(3, 2, 'NXB Kim Đồng', 2005, 40),    -- Dế Mèn Phiêu Lưu Ký
+(4, 3, 'NXB Văn Học', 1995, 25),      -- Lão Hạc
+(5, 4, 'NXB Văn Học', 2000, 20),      -- Số Đỏ
+(6, 5, 'NXB Nhã Nam', 2015, 35),      -- Rừng Na Uy
+(7, 6, 'Bloomsbury', 1997, 60),       -- Harry Potter và Hòn Đá Phù Thủy
+(8, 7, 'NXB Nhã Nam', 2007, 45),      -- Trăm Năm Cô Đơn
+(9, 8, 'Penguin Books', 1813, 30),    -- Kiêu Hãnh và Định Kiến
+(10, 9, 'NXB Văn Học', 1952, 28),     -- Ông Già và Biển Cả
+(11, 10, 'HarperCollins', 1937, 55),  -- Án Mạng Trên Chuyến Tàu Tốc Hành
+(12, 11, 'NXB Trẻ', 1974, 32),        -- Carrie
+(13, 12, 'NXB Nhã Nam', 1949, 40),    -- 1984
+(14, 13, 'NXB Tri Thức', 2014, 50),   -- Sapiens: Lược Sử Loài Người
+(15, 14, 'NXB Thế Giới', 2000, 35),   -- Điểm Bùng Phát
+(16, 15, 'NXB Văn Học', 1939, 22),    -- Tắt Đèn
+(17, 16, 'NXB Văn Học', 1980, 15),    -- Từ Ấy
+(18, 17, 'NXB Văn Học', 2000, 60),    -- Truyện Kiều
+(19, 18, 'NXB Chính Trị Quốc Gia', 1945, 25), -- Nhật Ký Trong Tù
+(20, 19, 'NXB Văn Học', 1990, 20),    -- Thơ Xuân Diệu
+(21, 20, 'NXB Văn Học', 1985, 18),    -- Thơ Hàn Mặc Tử
+(22, 21, 'NXB Nhã Nam', 1988, 45),    -- Nhà Giả Kim
+(23, 22, 'NXB Văn Học', 1862, 30),    -- Những Người Khốn Khổ
+(24, 23, 'NXB Thế Giới', 1865, 28),   -- Chiến Tranh và Hòa Bình
+(25, 24, 'NXB Văn Học', 1866, 25),    -- Tội Ác và Hình Phạt
+(26, 25, 'NXB Kim Đồng', 1876, 50),   -- Cuộc Phiêu Lưu Của Tom Sawyer
+(27, 26, 'NXB Văn Học', 1995, 15),    -- Dấu Chân Trên Cát
+(28, 27, 'NXB Văn Học', 1970, 20),    -- Đất Nước
+(29, 28, 'NXB Chính Trị Quốc Gia', 1925, 12), -- Ngục Trung Nhật Ký
+(30, 29, 'NXB Văn Học', 1938, 18);    -- Bước Đường Cùng
+
+-- Insert 30 records into bookstore_phieunhapsach
+INSERT INTO bookstore_phieunhapsach (MaPhieuNhap, NgayNhap) VALUES
+(1, '2023-01-10'),
+(2, '2023-02-15'),
+(3, '2023-03-20'),
+(4, '2023-04-05'),
+(5, '2023-05-12'),
+(6, '2023-06-18'),
+(7, '2023-07-25'),
+(8, '2023-08-30'),
+(9, '2023-09-14'),
+(10, '2023-10-22'),
+(11, '2023-11-08'),
+(12, '2023-12-15'),
+(13, '2024-01-20'),
+(14, '2024-02-25'),
+(15, '2024-03-10'),
+(16, '2024-04-15'),
+(17, '2024-05-20'),
+(18, '2024-06-05'),
+(19, '2024-07-12'),
+(20, '2024-08-18'),
+(21, '2024-09-25'),
+(22, '2024-10-30'),
+(23, '2024-11-14'),
+(24, '2024-12-20'),
+(25, '2025-01-05'),
+(26, '2025-02-10'),
+(27, '2025-03-15'),
+(28, '2025-04-01'),
+(29, '2025-04-15'),
+(30, '2025-04-25');
+
+select * from bookstore_sach;
+select * from bookstore_phieunhapsach;
+
+INSERT INTO bookstore_ct_nhapsach (MaPhieuNhap_id, MaSach_id, SLNhap, GiaNhap) VALUES
+(1, 1, 20, 80000.00),    -- PhieuNhap 1, Cho Tôi Xin Một Vé Đi Tuổi Thơ
+(1, 2, 15, 100000.00),   -- PhieuNhap 1, Cho Tôi Xin Một Vé Đi Tuổi Thơ (reprint)
+(2, 3, 25, 60000.00),    -- PhieuNhap 2, Dế Mèn Phiêu Lưu Ký
+(2, 4, 10, 50000.00),    -- PhieuNhap 2, Lão Hạc
+(3, 5, 12, 70000.00),    -- PhieuNhap 3, Số Đỏ
+(3, 6, 20, 120000.00),   -- PhieuNhap 3, Rừng Na Uy
+(4, 7, 30, 150000.00),   -- PhieuNhap 4, Harry Potter
+(4, 8, 15, 130000.00),   -- PhieuNhap 4, Trăm Năm Cô Đơn
+(5, 9, 10, 90000.00),    -- PhieuNhap 5, Kiêu Hãnh và Định Kiến
+(5, 10, 12, 80000.00),   -- PhieuNhap 5, Ông Già và Biển Cả
+(6, 11, 25, 100000.00),  -- PhieuNhap 6, Án Mạng Trên Chuyến Tàu
+(6, 12, 15, 110000.00),  -- PhieuNhap 6, Carrie
+(7, 13, 20, 120000.00),  -- PhieuNhap 7, 1984
+(7, 14, 25, 140000.00),  -- PhieuNhap 7, Sapiens
+(8, 15, 15, 90000.00),   -- PhieuNhap 8, Điểm Bùng Phát
+(8, 16, 10, 60000.00),   -- PhieuNhap 8, Tắt Đèn
+(9, 17, 8, 50000.00),    -- PhieuNhap 9, Từ Ấy
+(9, 18, 30, 70000.00),   -- PhieuNhap 9, Truyện Kiều
+(10, 19, 10, 60000.00),  -- PhieuNhap 10, Nhật Ký Trong Tù
+(10, 20, 12, 50000.00),  -- PhieuNhap 10, Thơ Xuân Diệu
+(11, 21, 10, 50000.00),  -- PhieuNhap 11, Thơ Hàn Mặc Tử
+(11, 22, 20, 130000.00), -- PhieuNhap 11, Nhà Giả Kim
+(12, 23, 15, 100000.00), -- PhieuNhap 12, Những Người Khốn Khổ
+(12, 24, 12, 110000.00), -- PhieuNhap 12, Chiến Tranh và Hòa Bình
+(13, 25, 10, 120000.00), -- PhieuNhap 13, Tội Ác và Hình Phạt
+(13, 26, 25, 80000.00),  -- PhieuNhap 13, Cuộc Phiêu Lưu Của Tom Sawyer
+(14, 27, 8, 50000.00),   -- PhieuNhap 14, Dấu Chân Trên Cát
+(14, 28, 6, 60000.00),   -- PhieuNhap 14, Đất Nước
+(15, 29, 5, 50000.00),   -- PhieuNhap 15, Ngục Trung Nhật Ký
+(15, 30, 10, 60000.00);  -- PhieuNhap 15, Bước Đường Cùng
+
+INSERT INTO bookstore_khachhang (MaKH, HoTen, DiaChi, DienThoai, Email, SoTienNo) VALUES
+(1, 'Nguyễn Văn An', '123 Lê Lợi, Hà Nội', '0901234567', 'an.nguyen@gmail.com', 0.00),
+(2, 'Trần Thị Bình', '45 Nguyễn Huệ, TP.HCM', '0912345678', 'binh.tran@gmail.com', 150000.00),
+(3, 'Lê Minh Châu', '78 Trần Phú, Đà Nẵng', '0923456789', 'chau.le@gmail.com', 0.00),
+(4, 'Phạm Quốc Dũng', '56 Lý Thường Kiệt, Hà Nội', '0934567890', 'dung.pham@gmail.com', 0.00),
+(5, 'Hoàng Thị Ngọc', '12 Hùng Vương, Huế', '0945678901', 'ngoc.hoang@gmail.com', 200000.00),
+(6, 'Vũ Văn Hùng', '89 Nguyễn Trãi, TP.HCM', '0956789012', 'hung.vu@gmail.com', 0.00),
+(7, 'Đỗ Thị Lan', '34 Hai Bà Trưng, Đà Nẵng', '0967890123', 'lan.do@gmail.com', 0.00),
+(8, 'Bùi Minh Khôi', '67 Phạm Văn Đồng, Hà Nội', '0978901234', 'khoi.bui@gmail.com', 0.00),
+(9, 'Ngô Thanh Lâm', '23 Điện Biên Phủ, Huế', '0989012345', 'lam.ngo@gmail.com', 100000.00),
+(10, 'Mai Văn Nam', '90 Lê Duẩn, TP.HCM', '0990123456', 'nam.mai@gmail.com', 0.00),
+(11, 'Trương Thị Oanh', '45 Nguyễn Đình Chiểu, Hà Nội', '0902345678', 'oanh.truong@gmail.com', 0.00),
+(12, 'Lý Quang Phát', '78 Hùng Vương, Đà Nẵng', '0913456789', 'phat.ly@gmail.com', 0.00),
+(13, 'Hà Văn Quân', '12 Trần Hưng Đạo, Huế', '0924567890', 'quan.ha@gmail.com', 0.00),
+(14, 'Đặng Thị Hồng', '56 Lê Lợi, TP.HCM', '0935678901', 'hong.dang@gmail.com', 250000.00),
+(15, 'Phan Văn Sơn', '89 Nguyễn Huệ, Hà Nội', '0946789012', 'son.phan@gmail.com', 0.00),
+(16, 'Nguyễn Thị Thảo', '34 Trần Phú, Đà Nẵng', '0957890123', 'thao.nguyen@gmail.com', 0.00),
+(17, 'Trần Văn Thắng', '67 Hai Bà Trưng, Huế', '0968901234', 'thang.tran@gmail.com', 0.00),
+(18, 'Lê Thị Thu', '90 Phạm Văn Đồng, TP.HCM', '0979012345', 'thu.le@gmail.com', 0.00),
+(19, 'Phạm Văn Tín', '23 Lê Duẩn, Hà Nội', '0980123456', 'tin.pham@gmail.com', 180000.00),
+(20, 'Hoàng Minh Trí', '45 Điện Biên Phủ, Đà Nẵng', '0991234567', 'tri.hoang@gmail.com', 0.00),
+(21, 'Vũ Thị Tuyết', '78 Nguyễn Trãi, Huế', '0903456789', 'tuyet.vu@gmail.com', 0.00),
+(22, 'Đỗ Văn Vinh', '12 Hùng Vương, TP.HCM', '0914567890', 'vinh.do@gmail.com', 0.00),
+(23, 'Bùi Thị Xuân', '56 Trần Hưng Đạo, Hà Nội', '0925678901', 'xuan.bui@gmail.com', 0.00),
+(24, 'Ngô Văn Ý', '89 Lê Lợi, Đà Nẵng', '0936789012', 'y.ngo@gmail.com', 0.00),
+(25, 'Mai Thị Yến', '34 Nguyễn Huệ, TP.HCM', '0947890123', 'yen.mai@gmail.com', 120000.00),
+(26, 'Trương Văn An', '67 Phạm Văn Đồng, Huế', '0958901234', 'an.truong@gmail.com', 0.00),
+(27, 'Lý Thị Bích', '90 Nguyễn Đình Chiểu, Hà Nội', '0969012345', 'bich.ly@gmail.com', 0.00),
+(28, 'Hà Văn Cường', '23 Trần Phú, TP.HCM', '0970123456', 'cuong.ha@gmail.com', 0.00),
+(29, 'Đặng Thị Duyên', '45 Hai Bà Trưng, Đà Nẵng', '0981234567', 'duyen.dang@gmail.com', 0.00),
+(30, 'Phan Văn Em', '78 Lê Duẩn, Huế', '0992345678', 'em.phan@gmail.com', 0.00);
+DELETE FROM bookstore_khachhang;
+INSERT INTO bookstore_khachhang (MaKH, HoTen, DiaChi, DienThoai, Email, SoTienNo) VALUES
+(1, 'Nguyễn Văn An', '123 Lê Lợi, Hà Nội', '0901234567', 'an.nguyen@gmail.com', 0.00),
+(2, 'Trần Thị Bình', '45 Nguyễn Huệ, TP.HCM', '0912345678', 'binh.tran@gmail.com', 0.00),
+(3, 'Lê Minh Châu', '78 Trần Phú, Đà Nẵng', '0923456789', 'chau.le@gmail.com', 0.00),
+(4, 'Phạm Quốc Dũng', '56 Lý Thường Kiệt, Hà Nội', '0934567890', 'dung.pham@gmail.com', 0.00),
+(5, 'Hoàng Thị Ngọc', '12 Hùng Vương, Huế', '0945678901', 'ngoc.hoang@gmail.com', 0.00),
+(6, 'Vũ Văn Hùng', '89 Nguyễn Trãi, TP.HCM', '0956789012', 'hung.vu@gmail.com', 0.00),
+(7, 'Đỗ Thị Lan', '34 Hai Bà Trưng, Đà Nẵng', '0967890123', 'lan.do@gmail.com', 0.00),
+(8, 'Bùi Minh Khôi', '67 Phạm Văn Đồng, Hà Nội', '0978901234', 'khoi.bui@gmail.com', 0.00),
+(9, 'Ngô Thanh Lâm', '23 Điện Biên Phủ, Huế', '0989012345', 'lam.ngo@gmail.com', 0.00),
+(10, 'Mai Văn Nam', '90 Lê Duẩn, TP.HCM', '0990123456', 'nam.mai@gmail.com', 0.00),
+(11, 'Trương Thị Oanh', '45 Nguyễn Đình Chiểu, Hà Nội', '0902345678', 'oanh.truong@gmail.com', 0.00),
+(12, 'Lý Quang Phát', '78 Hùng Vương, Đà Nẵng', '0913456789', 'phat.ly@gmail.com', 0.00),
+(13, 'Hà Văn Quân', '12 Trần Hưng Đạo, Huế', '0924567890', 'quan.ha@gmail.com', 0.00),
+(14, 'Đặng Thị Hồng', '56 Lê Lợi, TP.HCM', '0935678901', 'hong.dang@gmail.com', 0.00),
+(15, 'Phan Văn Sơn', '89 Nguyễn Huệ, Hà Nội', '0946789012', 'son.phan@gmail.com', 0.00),
+(16, 'Nguyễn Thị Thảo', '34 Trần Phú, Đà Nẵng', '0957890123', 'thao.nguyen@gmail.com', 0.00),
+(17, 'Trần Văn Thắng', '67 Hai Bà Trưng, Huế', '0968901234', 'thang.tran@gmail.com', 0.00),
+(18, 'Lê Thị Thu', '90 Phạm Văn Đồng, TP.HCM', '0979012345', 'thu.le@gmail.com', 0.00),
+(19, 'Phạm Văn Tín', '23 Lê Duẩn, Hà Nội', '0980123456', 'tin.pham@gmail.com', 0.00),
+(20, 'Hoàng Minh Trí', '45 Điện Biên Phủ, Đà Nẵng', '0991234567', 'tri.hoang@gmail.com', 0.00),
+(21, 'Vũ Thị Tuyết', '78 Nguyễn Trãi, Huế', '0903456789', 'tuyet.vu@gmail.com', 0.00),
+(22, 'Đỗ Văn Vinh', '12 Hùng Vương, TP.HCM', '0914567890', 'vinh.do@gmail.com', 0.00),
+(23, 'Bùi Thị Xuân', '56 Trần Hưng Đạo, Hà Nội', '0925678901', 'xuan.bui@gmail.com', 0.00),
+(24, 'Ngô Văn Ý', '89 Lê Lợi, Đà Nẵng', '0936789012', 'y.ngo@gmail.com', 0.00),
+(25, 'Mai Thị Yến', '34 Nguyễn Huệ, TP.HCM', '0947890123', 'yen.mai@gmail.com', 0.00),
+(26, 'Trương Văn An', '67 Phạm Văn Đồng, Huế', '0958901234', 'an.truong@gmail.com', 0.00),
+(27, 'Lý Thị Bích', '90 Nguyễn Đình Chiểu, Hà Nội', '0969012345', 'bich.ly@gmail.com', 0.00),
+(28, 'Hà Văn Cường', '23 Trần Phú, TP.HCM', '0970123456', 'cuong.ha@gmail.com', 0.00),
+(29, 'Đặng Thị Duyên', '45 Hai Bà Trưng, Đà Nẵng', '0981234567', 'duyen.dang@gmail.com', 0.00),
+(30, 'Phan Văn Em', '78 Lê Duẩn, Huế', '0992345678', 'em.phan@gmail.com', 0.00);
+select * from bookstore_khachhang;
+
+
+-- Trigger for INSERT on bookstore_hoadon
+CREATE TRIGGER update_sotienno_after_insert_hoadon
+AFTER INSERT ON bookstore_hoadon
+FOR EACH ROW
+BEGIN
+    UPDATE bookstore_khachhang
+    SET SoTienNo = (
+        SELECT COALESCE(SUM(hd.ConLai), 0) - COALESCE(SUM(ptt.SoTienThu), 0)
+        FROM bookstore_hoadon hd
+        LEFT JOIN bookstore_phieuthutien ptt ON ptt.MaKH_id = hd.MaKH_id
+        WHERE hd.MaKH_id = NEW.MaKH_id
+    )
+    WHERE MaKH = NEW.MaKH_id;
+END;
+
+-- Trigger for UPDATE on bookstore_hoadon
+CREATE TRIGGER update_sotienno_after_update_hoadon
+AFTER UPDATE OF ConLai ON bookstore_hoadon
+FOR EACH ROW
+BEGIN
+    UPDATE bookstore_khachhang
+    SET SoTienNo = (
+        SELECT COALESCE(SUM(hd.ConLai), 0) - COALESCE(SUM(ptt.SoTienThu), 0)
+        FROM bookstore_hoadon hd
+        LEFT JOIN bookstore_phieuthutien ptt ON ptt.MaKH_id = hd.MaKH_id
+        WHERE hd.MaKH_id = NEW.MaKH_id
+    )
+    WHERE MaKH = NEW.MaKH_id;
+END;
+
+-- Trigger for INSERT on bookstore_phieuthutien
+CREATE TRIGGER update_sotienno_after_insert_phieuthutien
+AFTER INSERT ON bookstore_phieuthutien
+FOR EACH ROW
+BEGIN
+    UPDATE bookstore_khachhang
+    SET SoTienNo = (
+        SELECT COALESCE(SUM(hd.ConLai), 0) - COALESCE(SUM(ptt.SoTienThu), 0)
+        FROM bookstore_hoadon hd
+        LEFT JOIN bookstore_phieuthutien ptt ON ptt.MaKH_id = hd.MaKH_id
+        WHERE hd.MaKH_id = NEW.MaKH_id
+    )
+    WHERE MaKH = NEW.MaKH_id;
+END;
+
+-- Trigger for UPDATE on bookstore_phieuthutien
+CREATE TRIGGER update_sotienno_after_update_phieuthutien
+AFTER UPDATE OF SoTienThu ON bookstore_phieuthutien
+FOR EACH ROW
+BEGIN
+    UPDATE bookstore_khachhang
+    SET SoTienNo = (
+        SELECT COALESCE(SUM(hd.ConLai), 0) - COALESCE(SUM(ptt.SoTienThu), 0)
+        FROM bookstore_hoadon hd
+        LEFT JOIN bookstore_phieuthutien ptt ON ptt.MaKH_id = hd.MaKH_id
+        WHERE hd.MaKH_id = NEW.MaKH_id
+    )
+    WHERE MaKH = NEW.MaKH_id;
+END;
