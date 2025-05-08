@@ -194,3 +194,14 @@ class ThamSo(models.Model):
         if self.TiLe <= 0:
             raise ValueError("TiLe must be more than 0.")
         super().save(*args, **kwargs)
+
+class GroupModelPermission(models.Model):
+    group = models.ForeignKey(NhomNguoiDung, on_delete=models.CASCADE)
+    model_name = models.CharField(max_length=100)
+    can_view = models.BooleanField(default=False)
+    can_add = models.BooleanField(default=False)
+    can_change = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('group', 'model_name')

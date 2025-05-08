@@ -3,7 +3,8 @@ from .views import (
     KhachHangViewSet, SachViewSet, HoaDonViewSet, CTHoaDonViewSet, PhieuThuTienViewSet,
     DauSachViewSet, TacGiaViewSet, TheLoaiViewSet, DauSachTacGiaViewSet,
     PhieuNhapSachViewSet, CTNhapSachViewSet,
-    BaoCaoTonViewSet, CTBCTonViewSet, BaoCaoCongNoViewSet, CTBCCongNoViewSet, ThamSoViewSet
+    BaoCaoTonViewSet, CTBCTonViewSet, BaoCaoCongNoViewSet, CTBCCongNoViewSet, ThamSoViewSet,
+    UserManagementViewSet, GroupModelPermissionViewSet,
 )
 
 router = routers.DefaultRouter()
@@ -23,5 +24,6 @@ router.register(r'ctbcton', CTBCTonViewSet)
 router.register(r'baocaocongno', BaoCaoCongNoViewSet)
 router.register(r'ctbccongno', CTBCCongNoViewSet)
 router.register(r'thamso', ThamSoViewSet)
-
+router.register(r'user', UserManagementViewSet, basename='user')
+router.register(r'groupmodelpermission', GroupModelPermissionViewSet)
 urlpatterns = router.urls

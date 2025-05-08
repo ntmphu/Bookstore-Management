@@ -1,8 +1,10 @@
 from rest_framework import serializers
+from django.contrib.auth.models import User
 from .models import (
     TheLoai, DauSach, TacGia, DauSach_TacGia, Sach, KhachHang,
     PhieuNhapSach, CT_NhapSach, HoaDon, CT_HoaDon, PhieuThuTien,
-    BaoCaoTon, CT_BCTon, BaoCaoCongNo, CT_BCCongNo, ThamSo
+    BaoCaoTon, CT_BCTon, BaoCaoCongNo, CT_BCCongNo, ThamSo,
+    GroupModelPermission
 )
 
 class TheLoaiSerializer(serializers.ModelSerializer):
@@ -83,4 +85,38 @@ class CTBCCongNoSerializer(serializers.ModelSerializer):
 class ThamSoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ThamSo
+        fields = '__all__'
+    
+VALID_GROUPS = ['quanli', 'NguoiThu', 'NguoiLapHD', 'NguoiNhap']
+class UserSerializer(serializers.ModelSerializer):
+    groups = serializers.StringRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'groups', 'first_name', 'last_name']
+
+class CreateUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    role = serializers.ChoiceField(choices=VALID_GROUPS, write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'password', 'email', 'first_name', 'last_name', 'role']
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Username already exists")
+        return value
+
+    def create(self, validated_data):
+        role = validated_data.pop('role')
+        password = validated_data.pop('password')
+        user = User.objects.create_user(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
+class GroupModelPermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupModelPermission
         fields = '__all__'
