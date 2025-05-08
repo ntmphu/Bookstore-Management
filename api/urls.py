@@ -1,7 +1,7 @@
 from rest_framework import routers
 from .views import (
     KhachHangViewSet, SachViewSet, HoaDonViewSet, CTHoaDonViewSet, PhieuThuTienViewSet,
-    DauSachViewSet, TacGiaViewSet, TheLoaiViewSet, DauSachTacGiaViewSet,
+    DauSachViewSet, TacGiaViewSet, TheLoaiViewSet,
     PhieuNhapSachViewSet, CTNhapSachViewSet,
     BaoCaoTonViewSet, CTBCTonViewSet, BaoCaoCongNoViewSet, CTBCCongNoViewSet, ThamSoViewSet,
     UserManagementViewSet, GroupModelPermissionViewSet,
@@ -16,7 +16,6 @@ router.register(r'phieuthutien', PhieuThuTienViewSet)
 router.register(r'dausach', DauSachViewSet)
 router.register(r'tacgia', TacGiaViewSet)
 router.register(r'theloai', TheLoaiViewSet)
-router.register(r'dausach_tacgia', DauSachTacGiaViewSet)
 router.register(r'phieunhapsach', PhieuNhapSachViewSet)
 router.register(r'ctnhapsach', CTNhapSachViewSet)
 router.register(r'baocaoton', BaoCaoTonViewSet)

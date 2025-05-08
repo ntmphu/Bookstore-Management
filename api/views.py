@@ -1,13 +1,13 @@
 from rest_framework import viewsets, permissions
 from .models import (
     KhachHang, Sach, HoaDon, CT_HoaDon, PhieuThuTien,
-    DauSach, TacGia, TheLoai, DauSach_TacGia,
+    DauSach, TacGia, TheLoai, 
     PhieuNhapSach, CT_NhapSach,
     BaoCaoTon, CT_BCTon, BaoCaoCongNo, CT_BCCongNo, ThamSo, GroupModelPermission 
 )
 from .serializers import (
     KhachHangSerializer, SachSerializer, HoaDonSerializer, CTHoaDonSerializer, PhieuThuTienSerializer,
-    DauSachSerializer, TacGiaSerializer, TheLoaiSerializer, DauSachTacGiaSerializer,
+    DauSachSerializer, TacGiaSerializer, TheLoaiSerializer, 
     PhieuNhapSachSerializer, CTNhapSachSerializer,
     BaoCaoTonSerializer, CTBCTonSerializer, BaoCaoCongNoSerializer, CTBCCongNoSerializer, ThamSoSerializer,
     GroupModelPermissionSerializer
@@ -18,7 +18,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import UserSerializer, CreateUserSerializer
-VALID_GROUPS = ['quanli', 'NguoiThu', 'NguoiLapHD', 'NguoiNhap']
+VALID_GROUPS = ['NguoiNhap', 'ThuNgan']
 class DynamicModelPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
@@ -166,12 +166,6 @@ class TheLoaiViewSet(viewsets.ModelViewSet):
     serializer_class = TheLoaiSerializer
     permission_classes = [DynamicModelPermission]
 
-# DauSach_TacGia: Nguoi nhap (full), Quanli (all)
-class DauSachTacGiaViewSet(viewsets.ModelViewSet):
-    queryset = DauSach_TacGia.objects.all()
-    serializer_class = DauSachTacGiaSerializer
-
-    permission_classes = [DynamicModelPermission]
 
 # PhieuNhapSach: Nguoi nhap (full), Quanli (all)
 class PhieuNhapSachViewSet(viewsets.ModelViewSet):

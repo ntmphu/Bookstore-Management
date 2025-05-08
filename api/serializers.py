@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
-    TheLoai, DauSach, TacGia, DauSach_TacGia, Sach, KhachHang,
+    TheLoai, DauSach, TacGia, Sach, KhachHang,
     PhieuNhapSach, CT_NhapSach, HoaDon, CT_HoaDon, PhieuThuTien,
     BaoCaoTon, CT_BCTon, BaoCaoCongNo, CT_BCCongNo, ThamSo,
     GroupModelPermission
@@ -22,10 +22,6 @@ class TacGiaSerializer(serializers.ModelSerializer):
         model = TacGia
         fields = '__all__'
 
-class DauSachTacGiaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DauSach_TacGia
-        fields = '__all__'
 
 class SachSerializer(serializers.ModelSerializer):
     class Meta:
@@ -87,7 +83,7 @@ class ThamSoSerializer(serializers.ModelSerializer):
         model = ThamSo
         fields = '__all__'
     
-VALID_GROUPS = ['quanli', 'NguoiThu', 'NguoiLapHD', 'NguoiNhap']
+VALID_GROUPS = ['NguoiNhap', 'ThuNgan']
 class UserSerializer(serializers.ModelSerializer):
     groups = serializers.StringRelatedField(many=True, read_only=True)
 
