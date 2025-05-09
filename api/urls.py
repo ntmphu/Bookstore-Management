@@ -25,4 +25,5 @@ router.register(r'ctbccongno', CTBCCongNoViewSet)
 router.register(r'thamso', ThamSoViewSet)
 router.register(r'user', UserManagementViewSet, basename='user')
 router.register(r'groupmodelpermission', GroupModelPermissionViewSet)
+
 urlpatterns = router.urls

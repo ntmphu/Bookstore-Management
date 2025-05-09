@@ -101,7 +101,7 @@ class ThamSo(models.Model):
     
 class HoaDon(models.Model):
     MaHD = models.AutoField(primary_key=True)
-    MaKH = models.ForeignKey(KhachHang, on_delete=models.CASCADE)
+    MaKH = models.ForeignKey(KhachHang, on_delete=models.CASCADE, related_name='hoadon')
     NgayLap = models.DateField()
     NguoiLapHD = models.ForeignKey(
         User,
