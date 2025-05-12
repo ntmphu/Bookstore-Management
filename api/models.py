@@ -22,7 +22,7 @@ class TacGia(models.Model):
 class DauSach(models.Model):
     MaDauSach = models.AutoField(primary_key=True)
     TenSach = models.CharField(max_length=200)
-    MaTheLoai = models.ForeignKey(TheLoai, blank=True, null=True, on_delete=models.CASCADE, related_name='DauSach')
+    MaTheLoai = models.ForeignKey(TheLoai, blank=True, null=True, on_delete=models.SET_NULL, related_name='DauSach')
     MaTG = models.ManyToManyField(TacGia, blank=True, related_name='DauSach')
 
     def __str__(self):
@@ -33,7 +33,7 @@ class Sach(models.Model):
     MaDauSach = models.ForeignKey(DauSach, on_delete=models.CASCADE, related_name='sach')
     NXB = models.CharField(max_length=200)
     NamXB = models.IntegerField()
-    SLTon = models.IntegerField()
+    SLTon = models.IntegerField(blank=True, default=0, null=True)
 
     def __str__(self):
         return self.DauSach.TenSach
@@ -42,9 +42,9 @@ class KhachHang(models.Model):
     MaKhachHang = models.AutoField(primary_key=True)
     HoTen = models.CharField(max_length=200)
     DiaChi = models.CharField(max_length=200)
-    DienThoai = models.CharField(max_length=200)
+    DienThoai = models.CharField(max_length=200, unique=True)
     Email = models.EmailField(max_length=200)
-    SoTienNo = models.IntegerField()
+    SoTienNo = models.IntegerField(blank=True, default=0, null=True)
 
     def __str__(self):
         return self.HoTen
@@ -54,7 +54,7 @@ class PhieuNhapSach(models.Model):
     NgayNhap = models.DateField()
     NguoiNhap = models.ForeignKey(
         User,
-        on_delete=models.PROTECT,
+        on_delete=models.RESTRICT,
         related_name='NguoiNhap',
         verbose_name='Người nhập'
     )
@@ -65,7 +65,7 @@ class PhieuNhapSach(models.Model):
 
 class CT_NhapSach(models.Model):
     MaPhieuNhap = models.ForeignKey(PhieuNhapSach, on_delete=models.CASCADE)
-    MaSach = models.ForeignKey(Sach, on_delete=models.CASCADE)
+    MaSach = models.ForeignKey(Sach, on_delete=models.RESTRICT)
     SLNhap = models.IntegerField()
     GiaNhap = models.DecimalField(max_digits=15, decimal_places=2)
     
@@ -77,11 +77,11 @@ class CT_NhapSach(models.Model):
 
 class PhieuThuTien(models.Model):
     MaPhieuThu = models.AutoField(primary_key=True)
-    MaKH = models.ForeignKey(KhachHang, on_delete=models.CASCADE)
+    MaKH = models.ForeignKey(KhachHang, on_delete=models.RESTRICT)
     NgayThu = models.DateField()
     NguoiThu = models.ForeignKey(
         User,
-        on_delete=models.PROTECT,
+        on_delete=models.RESTRICT,
         related_name='NguoiThu',
         verbose_name='Người thu'
     )
@@ -101,17 +101,17 @@ class ThamSo(models.Model):
     
 class HoaDon(models.Model):
     MaHD = models.AutoField(primary_key=True)
-    MaKH = models.ForeignKey(KhachHang, on_delete=models.CASCADE, related_name='hoadon')
+    MaKH = models.ForeignKey(KhachHang, on_delete=models.RESTRICT, related_name='hoadon')
     NgayLap = models.DateField()
     NguoiLapHD = models.ForeignKey(
         User,
-        on_delete=models.PROTECT,
+        on_delete=models.RESTRICT,
         related_name='NguoiLapHD',
         verbose_name='Người lập Hóa Đơn'
     )
-    TongTien = models.DecimalField(max_digits=15, decimal_places=2)
+    TongTien = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False, null=True)
     SoTienTra = models.DecimalField(max_digits=15, decimal_places=2)
-    ConLai = models.DecimalField(max_digits=15, decimal_places=2)
+    ConLai = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False, null=True)
     MaSach = models.ManyToManyField(Sach, through='CT_HoaDon', related_name='HoaDon')
 
     def __str__(self):
@@ -119,10 +119,10 @@ class HoaDon(models.Model):
     
 class CT_HoaDon(models.Model):
     MaHD = models.ForeignKey(HoaDon, on_delete=models.CASCADE)
-    MaSach = models.ForeignKey(Sach, on_delete=models.CASCADE)
+    MaSach = models.ForeignKey(Sach, on_delete=models.RESTRICT)
     SLBan = models.IntegerField()
-    GiaBan = models.DecimalField(max_digits=15, decimal_places=2)
-    ThanhTien = models.DecimalField(max_digits=15, decimal_places=2, editable=False)  # Make it non-editable
+    GiaBan = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False, null=True)
+    ThanhTien = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False, null=True)  # Make it non-editable
 
     class Meta:
         unique_together = ('MaHD', 'MaSach')
@@ -138,10 +138,10 @@ class BaoCaoTon(models.Model):
     
 class CT_BCTon(models.Model):
     MaBCTon = models.ForeignKey(BaoCaoTon, on_delete=models.CASCADE)
-    MaSach = models.ForeignKey(Sach, on_delete=models.CASCADE)
-    TonDau = models.IntegerField()
-    PhatSinh = models.IntegerField()
-    TonCuoi = models.IntegerField(editable=False)  # Make it non-editable
+    MaSach = models.ForeignKey(Sach, on_delete=models.RESTRICT)
+    TonDau = models.IntegerField(blank=True, default=0, editable=False, null=True)
+    PhatSinh = models.IntegerField(blank=True, default=0, editable=False, null=True)
+    TonCuoi = models.IntegerField(blank=True, default=0, editable=False, null=True)  # Make it non-editable
     
     class Meta:
         unique_together = ('MaBCTon', 'MaSach')
@@ -160,10 +160,10 @@ class BaoCaoCongNo(models.Model):
     
 class CT_BCCongNo(models.Model):
     MaBCCN = models.ForeignKey(BaoCaoCongNo, on_delete=models.CASCADE)
-    MaKH = models.ForeignKey(KhachHang, on_delete=models.CASCADE)
-    NoDau = models.DecimalField(max_digits=15, decimal_places=2)
-    PhatSinh = models.DecimalField(max_digits=15, decimal_places=2)
-    NoCuoi = models.DecimalField(max_digits=15, decimal_places=2)
+    MaKH = models.ForeignKey(KhachHang, on_delete=models.RESTRICT)
+    NoDau = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False, null=True)
+    PhatSinh = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False, null=True)
+    NoCuoi = models.DecimalField(max_digits=15, decimal_places=2, default=0, editable=False, null=True)
     
     class Meta:
         unique_together = ('MaBCCN', 'MaKH')
