@@ -22,6 +22,11 @@ ALTER TABLE api_ct_hoadon RENAME COLUMN ThanhTien TO ThanhTien_OLD;
 ALTER TABLE api_ct_hoadon ADD ThanhTien INTEGER DEFAULT 0 NOT NULL;
 ALTER TABLE api_ct_hoadon DROP COLUMN ThanhTien_OLD;
 
+-- ALTER TABLE api_baocaoton RENAME COLUMN TonDau TO TonDau_OLD;
+-- ALTER TABLE api_baocaoton ADD TonDau INTEGER DEFAULT 0 NOT NULL;
+-- ALTER TABLE api_baocaoton DROP COLUMN TonDau_OLD;
+
+
 ALTER TABLE api_ct_bcton RENAME COLUMN TonDau TO TonDau_OLD;
 ALTER TABLE api_ct_bcton ADD TonDau INTEGER DEFAULT 0 NOT NULL;
 ALTER TABLE api_ct_bcton DROP COLUMN TonDau_OLD;
@@ -380,8 +385,22 @@ BEGIN
                     FROM api_BaoCaoTon
                     WHERE MaBCTon = NEW.MaBCTon_id
                 )
-            ), 0)
-            -
+            ), 0))
+    WHERE id = NEW.id;
+
+    UPDATE api_CT_BCTon 
+    SET TonCuoi = TonDau + (
+            COALESCE((
+                SELECT SUM(CTN.SLNhap)
+                FROM api_CT_NhapSach CTN
+                JOIN api_PhieuNhapSach PNS ON CTN.MaPhieuNhap_id = PNS.MaPhieuNhap
+                WHERE CTN.MaSach_id = NEW.MaSach_id
+                AND strftime('%Y-%m', PNS.NgayNhap) = (
+                    SELECT strftime('%Y-%m', date(Nam || '-' || printf('%02d', Thang) || '-01'))
+                    FROM api_BaoCaoTon
+                    WHERE MaBCTon = NEW.MaBCTon_id
+                )
+            ), 0)) -
             COALESCE((
                 SELECT SUM(CTH.SLBan)
                 FROM api_CT_HoaDon CTH
@@ -393,12 +412,6 @@ BEGIN
                     WHERE MaBCTon = NEW.MaBCTon_id
                 )
             ), 0)
-        )
-    WHERE id = NEW.id;
-
-    -- Cập nhật TonCuoi = TonDau + PhatSinh
-    UPDATE api_CT_BCTon 
-    SET TonCuoi = TonDau + PhatSinh
     WHERE id = NEW.id;
 END;
 
@@ -422,7 +435,22 @@ BEGIN
                 FROM api_BaoCaoTon
                 WHERE MaBCTon = NEW.MaBCTon_id
             )), 0
-        ) - COALESCE(
+        ))
+    WHERE id = NEW.id;
+
+    UPDATE api_CT_BCTon 
+    SET TonCuoi = TonDau + (
+            COALESCE((
+                SELECT SUM(CTN.SLNhap)
+                FROM api_CT_NhapSach CTN
+                JOIN api_PhieuNhapSach PNS ON CTN.MaPhieuNhap_id = PNS.MaPhieuNhap
+                WHERE CTN.MaSach_id = NEW.MaSach_id
+                AND strftime('%Y-%m', PNS.NgayNhap) = (
+                    SELECT strftime('%Y-%m', date(Nam || '-' || printf('%02d', Thang) || '-01'))
+                    FROM api_BaoCaoTon
+                    WHERE MaBCTon = NEW.MaBCTon_id
+                )
+            ), 0)) - COALESCE(
             (SELECT COALESCE(SUM(CTH.SLBan), 0)
             FROM api_CT_HoaDon CTH
             JOIN api_HoaDon HD ON CTH.MaHD_id = HD.MaHD
@@ -433,12 +461,6 @@ BEGIN
                 WHERE MaBCTon = NEW.MaBCTon_id
             )), 0
         )
-    )
-    WHERE id = NEW.id;
-
-    -- Calculate TonCuoi (TonDau + PhatSinh)
-    UPDATE api_CT_BCTon 
-    SET TonCuoi = TonDau + PhatSinh
     WHERE id = NEW.id;
 END;
 
@@ -472,7 +494,21 @@ BEGIN
                 FROM api_BaoCaoCongNo
                 WHERE MaBCCN = NEW.MaBCCN_id
             )), 0
-        ) - COALESCE(
+        ))
+    WHERE id = NEW.id;
+
+    UPDATE api_CT_BCCongNo 
+    SET NoCuoi = NoDau + (
+        SELECT COALESCE(
+            (SELECT COALESCE(SUM(HD.ConLai), 0)
+            FROM api_HoaDon HD
+            WHERE HD.MaKH_id = NEW.MaKH_id
+            AND strftime('%Y-%m', HD.NgayLap) = (
+                SELECT strftime('%Y-%m', date(Nam || '-' || printf('%02d', Thang) || '-01'))
+                FROM api_BaoCaoCongNo
+                WHERE MaBCCN = NEW.MaBCCN_id
+            )), 0
+        )) - COALESCE(
             (SELECT COALESCE(SUM(PT.SoTienThu), 0)
             FROM api_PhieuThuTien PT
             WHERE PT.MaKH_id = NEW.MaKH_id
@@ -482,12 +518,6 @@ BEGIN
                 WHERE MaBCCN = NEW.MaBCCN_id
             )), 0
         )
-    )
-    WHERE id = NEW.id;
-
-    -- Calculate NoCuoi (NoDau + PhatSinh)
-    UPDATE api_CT_BCCongNo 
-    SET NoCuoi = NoDau + PhatSinh
     WHERE id = NEW.id;
 END;
 
@@ -510,7 +540,21 @@ BEGIN
                 FROM api_BaoCaoCongNo
                 WHERE MaBCCN = NEW.MaBCCN_id
             )), 0
-        ) - COALESCE(
+        ))
+    WHERE id = NEW.id;
+
+    UPDATE api_CT_BCCongNo 
+    SET NoCuoi = NoDau + (
+        SELECT COALESCE(
+            (SELECT COALESCE(SUM(HD.ConLai), 0)
+            FROM api_HoaDon HD
+            WHERE HD.MaKH_id = NEW.MaKH_id
+            AND strftime('%Y-%m', HD.NgayLap) = (
+                SELECT strftime('%Y-%m', date(Nam || '-' || printf('%02d', Thang) || '-01'))
+                FROM api_BaoCaoCongNo
+                WHERE MaBCCN = NEW.MaBCCN_id
+            )), 0
+        )) - COALESCE(
             (SELECT COALESCE(SUM(PT.SoTienThu), 0)
             FROM api_PhieuThuTien PT
             WHERE PT.MaKH_id = NEW.MaKH_id
@@ -520,11 +564,5 @@ BEGIN
                 WHERE MaBCCN = NEW.MaBCCN_id
             )), 0
         )
-    )
-    WHERE id = NEW.id;
-
-    -- Calculate NoCuoi (NoDau + PhatSinh)
-    UPDATE api_CT_BCCongNo 
-    SET NoCuoi = NoDau + PhatSinh
     WHERE id = NEW.id;
 END;

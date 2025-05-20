@@ -175,3 +175,158 @@ INSERT INTO api_ct_bccongno (MaBCCN_id, MaKH_id) VALUES
 (1, 4),  -- Khách 4: không phát sinh
 (1, 5),  -- Khách 5: phát sinh và trả hết
 (1, 6);  -- Khách 6: nợ lớn, trả một phần
+
+INSERT INTO api_theloai (tentheloai) VALUES 
+('Y học'),
+('Giáo trình'),
+('Kỹ năng sống');
+
+INSERT INTO api_tacgia (TenTG) VALUES
+('Malcolm Gladwell'),
+('Richard Feynman'),
+('Nguyễn Nhật Linh');
+
+INSERT INTO api_dausach (TenSach, MaTheLoai_id) VALUES
+('Outliers', 13),               -- Kỹ năng sống
+('Surely You’re Joking, Mr. Feynman!', 1),  -- Khoa học viễn tưởng
+('Bí quyết học giỏi', 14);     -- Giáo trình
+
+INSERT INTO api_dausach_MaTG (dausach_id, tacgia_id) VALUES
+(7, 7),   -- Outliers by Malcolm Gladwell
+(8, 8),   -- Feynman book
+(9, 9);   -- Bí quyết học giỏi by Nguyễn Nhật Linh
+
+INSERT INTO api_sach (NXB, NamXB, MaDauSach_id) VALUES
+('NXB Lao Động', 2020, 7),
+('NXB Khoa Học Tự Nhiên', 2017, 8),
+('NXB Giáo Dục', 2022, 9);
+
+INSERT INTO api_phieunhapsach (NgayNhap, NguoiNhap_id) VALUES
+('2025-05-10', 1);
+
+-- Chi tiết phiếu nhập
+INSERT INTO api_ct_nhapsach (SLNhap, GiaNhap, MaPhieuNhap_id, MaSach_id) VALUES
+(150, 110000, 4, 7),
+(200, 130000, 4, 8),
+(150, 90000, 4, 9);
+
+INSERT INTO api_khachhang (HoTen, DiaChi, DienThoai, Email) VALUES
+('Bùi Thị Hạnh', '88 Lê Lợi, Hải Phòng', '0912348888', 'hanhbui@gmail.com');
+
+INSERT INTO api_hoadon (NgayLap, SoTienTra, NguoiLapHD_id, MaKH_id) VALUES
+('2025-05-10', 200000, 1, 7);
+
+INSERT INTO api_ct_hoadon (SLBan, MaHD_id, MaSach_id) VALUES
+(1, 7, 7),
+(1, 7, 9);  -- Outliers và Bí quyết học giỏi
+
+INSERT INTO api_phieuthutien (NgayThu, SoTienThu, MaKH_id, NguoiThu_id) VALUES
+('2025-05-11', 10000, 7, 1);
+
+INSERT INTO api_ct_bcton (MaBCTon_id, MaSach_id) VALUES
+(1, 7),
+(1, 8),
+(1, 9);
+
+INSERT INTO api_ct_bccongno (MaBCCN_id, MaKH_id) VALUES
+(1, 7);
+
+-- Hóa đơn
+INSERT INTO api_hoadon (NgayLap, SoTienTra, NguoiLapHD_id, MaKH_id) VALUES
+('2025-03-25', 100000, 1, 1),
+('2025-03-18', 300000, 1, 4);
+
+-- Chi tiết hóa đơn
+INSERT INTO api_ct_hoadon (SLBan, MaHD_id, MaSach_id) VALUES
+(1, 9, 5),
+(1, 9, 4),
+(4, 9, 6),
+(2, 9, 7);
+
+
+-- Chi tiết hóa đơn
+INSERT INTO api_ct_hoadon (SLBan, MaHD_id, MaSach_id) VALUES
+(1, 8, 5),
+(1, 8, 4),
+(4, 8, 6),
+(2, 8, 7);
+
+INSERT INTO api_phieuthutien (NgayThu, SoTienThu, MaKH_id, NguoiThu_id) VALUES
+('2025-03-27', 40865, 1, 1),
+('2025-03-23', 182965, 4, 1);
+ 
+INSERT INTO api_phieuthutien (NgayThu, SoTienThu, MaKH_id, NguoiThu_id) VALUES
+('2025-03-27', 40865, 1, 1),
+('2025-03-23', 182965, 4, 1);
+
+INSERT INTO api_phieunhapsach (NgayNhap, NguoiNhap_id) VALUES
+('2025-03-05', 1),
+('2025-04-02', 1),
+('2025-06-12', 1);
+
+INSERT INTO api_tacgia (TenTG) VALUES
+('George Orwell'),
+('Malcolm Gladwell'),
+('Trịnh Xuân Thuận'),
+('Haruki Murakami'),
+('Walter Isaacson'),
+('Tony Buổi Sáng');
+
+INSERT INTO api_dausach (TenSach, MaTheLoai_id) VALUES
+('1984', 1),                                -- Khoa học viễn tưởng
+('Outliers: The Story of Success', 4),     -- Kinh doanh
+('Giai Điệu Vũ Trụ', 1),                   -- Khoa học viễn tưởng
+('Rừng Na Uy', 3),                         -- Văn học Việt Nam / Nhật Bản
+('Steve Jobs', 4),                         -- Kinh doanh / tiểu sử
+('Cà Phê Cùng Tony', 4);                   -- Kinh doanh
+
+INSERT INTO api_dausach_MaTG (dausach_id, tacgia_id) VALUES
+(10, 10),   -- 1984 by George Orwell
+(11, 11),   -- Outliers by Malcolm Gladwell
+(12, 12),   -- Giai Điệu Vũ Trụ by Trịnh Xuân Thuận
+(13, 13), -- Rừng Na Uy by Haruki Murakami
+(14, 14), -- Steve Jobs by Walter Isaacson
+(15, 15); -- Cà Phê Cùng Tony by Tony Buổi Sáng
+
+INSERT INTO api_sach (NXB, NamXB, MaDauSach_id) VALUES
+('NXB Văn Học', 2017, 10),     -- 1984
+('NXB Alpha Books', 2020, 11), -- Outliers
+('NXB Trẻ', 2021, 12),         -- Giai Điệu Vũ Trụ
+('NXB Hội Nhà Văn', 2015, 13),-- Rừng Na Uy
+('NXB Trẻ', 2019, 14),        -- Steve Jobs
+('NXB Trẻ', 2022, 15);        -- Cà Phê Cùng Tony
+
+-- Phiếu Nhập 4 - Tháng 3
+INSERT INTO api_ct_nhapsach (SLNhap, GiaNhap, MaPhieuNhap_id, MaSach_id) VALUES
+(200, 80000, 4, 10),   -- Mắt Biếc
+(200, 140000, 4, 11);  -- Sapiens
+
+-- Phiếu Nhập 5 - Tháng 4
+INSERT INTO api_ct_nhapsach (SLNhap, GiaNhap, MaPhieuNhap_id, MaSach_id) VALUES
+(150, 95000, 5, 12),   -- Harry Potter
+(300, 210000, 5, 13);  -- A Brief History of Time
+
+-- Phiếu Nhập 6 - Tháng 6
+INSERT INTO api_ct_nhapsach (SLNhap, GiaNhap, MaPhieuNhap_id, MaSach_id) VALUES
+(175, 160000, 6, 14),  -- Từ Điển Toán Học
+(200, 120000, 6, 15);  -- The Da Vinci Code
+
+INSERT INTO api_baocaoton (Thang, Nam) VALUES (3, 2025);
+
+INSERT INTO api_ct_bcton (MaBCTon_id, MaSach_id) VALUES
+(2, 1),
+(2, 3);
+
+INSERT INTO api_baocaoton (Thang, Nam) VALUES (4, 2025);
+
+INSERT INTO api_ct_bcton (MaBCTon_id, MaSach_id) VALUES
+(3, 10),
+(3, 11);
+
+INSERT INTO api_baocaoton (Thang, Nam) VALUES (6, 2025);
+
+INSERT INTO api_ct_bcton (MaBCTon_id, MaSach_id) VALUES
+(3, 14),
+(3, 15);
+INSERT INTO API_THELOAI (TenTheLoai) VALUES ('Giáo dục');
+PRAGMA foreign_key_check;

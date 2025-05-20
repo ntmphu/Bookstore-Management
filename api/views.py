@@ -1,10 +1,13 @@
 from rest_framework import viewsets, permissions
+from django.db import IntegrityError
+
 from .models import (
     KhachHang, Sach, HoaDon, CT_HoaDon, PhieuThuTien,
     DauSach, TacGia, TheLoai, 
     PhieuNhapSach, CT_NhapSach,
     BaoCaoTon, CT_BCTon, BaoCaoCongNo, CT_BCCongNo, ThamSo, GroupModelPermission 
 )
+
 from .serializers import (
     KhachHangSerializer, SachSerializer, HoaDonSerializer, CTHoaDonSerializer, PhieuThuTienSerializer,
     DauSachSerializer, TacGiaSerializer, TheLoaiSerializer, 
@@ -12,9 +15,8 @@ from .serializers import (
     BaoCaoTonSerializer, CTBCTonSerializer, BaoCaoCongNoSerializer, CTBCCongNoSerializer, ThamSoSerializer,
     GroupModelPermissionSerializer
 )
+
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, NumberFilter, CharFilter, DateFilter
-
-
 from django.contrib.auth.models import User, Group
 from rest_framework import status
 from rest_framework.decorators import action
@@ -45,7 +47,6 @@ class DynamicModelPermission(permissions.BasePermission):
             return group_perms.filter(can_change=True).exists()
         elif request.method == 'DELETE':
             return group_perms.filter(can_delete=True).exists()
-
 
 class UserManagementViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -119,10 +120,6 @@ class GroupModelPermissionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser]  # Only allow admin/Quanli to manage
 # Use in viewsets
 
-
-
-
-
 # CT_HoaDon: Nguoilaphd (full), Quanli (all)
 class CTHoaDonViewSet(viewsets.ModelViewSet):
     queryset = CT_HoaDon.objects.all()
@@ -130,17 +127,45 @@ class CTHoaDonViewSet(viewsets.ModelViewSet):
 
     permission_classes = [DynamicModelPermission]
 
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 # PhieuThuTien: Nguoithu (full), Quanli (all)
 class PhieuThuTienViewSet(viewsets.ModelViewSet):
     queryset = PhieuThuTien.objects.all()
     serializer_class = PhieuThuTienSerializer
 
     permission_classes = [DynamicModelPermission]
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 # DauSach: Nguoi nhap (full), Quanli (all)
 class DauSachViewSet(viewsets.ModelViewSet):
     queryset = DauSach.objects.all()
     serializer_class = DauSachSerializer
     permission_classes = [DynamicModelPermission]
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 # TacGia: Nguoi nhap (full), Quanli (all)
 class TacGiaViewSet(viewsets.ModelViewSet):
@@ -148,13 +173,29 @@ class TacGiaViewSet(viewsets.ModelViewSet):
     serializer_class = TacGiaSerializer
     permission_classes = [DynamicModelPermission]
 
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 # TheLoai: Nguoi nhap (full), Quanli (all)
 class TheLoaiViewSet(viewsets.ModelViewSet):
     queryset = TheLoai.objects.all()
     serializer_class = TheLoaiSerializer
     permission_classes = [DynamicModelPermission]
 
-
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 # CT_NhapSach: Nguoi nhap (full), Quanli (all)
 class CTNhapSachViewSet(viewsets.ModelViewSet):
@@ -163,24 +204,56 @@ class CTNhapSachViewSet(viewsets.ModelViewSet):
 
     permission_classes = [DynamicModelPermission]
 
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class CTBCTonViewSet(viewsets.ModelViewSet):
     queryset = CT_BCTon.objects.all()
     serializer_class = CTBCTonSerializer
     permission_classes = [DynamicModelPermission]
 
-
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class CTBCCongNoViewSet(viewsets.ModelViewSet):
     queryset = CT_BCCongNo.objects.all()
     serializer_class = CTBCCongNoSerializer
     permission_classes = [DynamicModelPermission]
 
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 class ThamSoViewSet(viewsets.ModelViewSet):
     queryset = ThamSo.objects.all()
     serializer_class = ThamSoSerializer
     permission_classes = [DynamicModelPermission]
 
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 # Custom filter for Sach
 class SachFilter(FilterSet):
@@ -219,6 +292,15 @@ class SachViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = SachFilter
 
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 class KhachHangFilter(FilterSet):
     id = NumberFilter(field_name='MaKhachHang')
     name = CharFilter(field_name='HoTen', lookup_expr='icontains')
@@ -236,7 +318,14 @@ class KhachHangViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = KhachHangFilter
 
-
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 # PhieuNhapSach filterset
 class PhieuNhapSachFilter(FilterSet):
@@ -249,6 +338,7 @@ class PhieuNhapSachFilter(FilterSet):
     class Meta:
         model = PhieuNhapSach
         fields = ['MaPhieuNhap', 'NgayNhap', 'ct_nhapsach__MaSach__MaSach', 'ct_nhapsach__MaSach__MaDauSach__TenSach']
+
 # PhieuNhapSach: Nguoi nhap (full), Quanli (all)
 class PhieuNhapSachViewSet(viewsets.ModelViewSet):
     queryset = PhieuNhapSach.objects.all()
@@ -256,6 +346,15 @@ class PhieuNhapSachViewSet(viewsets.ModelViewSet):
     permission_classes = [DynamicModelPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_class = PhieuNhapSachFilter
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 # BaoCaoTon filterset
 class BaoCaoTonFilter(FilterSet):
@@ -270,12 +369,23 @@ class BaoCaoTonFilter(FilterSet):
     class Meta:
         model = BaoCaoTon
         fields = ['Thang', 'Nam', 'ct_bcton__MaSach__MaSach', 'ct_bcton__MaSach__MaDauSach__TenSach', 'ct_bcton__TonDau', 'ct_bcton__TonCuoi']
+
 class BaoCaoTonViewSet(viewsets.ModelViewSet):
     queryset = BaoCaoTon.objects.all()
     serializer_class = BaoCaoTonSerializer
     permission_classes = [DynamicModelPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_class = BaoCaoTonFilter
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 # BaoCaoCongNo filterset
 class BaoCaoCongNoFilter(FilterSet):
     thang = NumberFilter(field_name='Thang')
@@ -288,13 +398,23 @@ class BaoCaoCongNoFilter(FilterSet):
     class Meta:
         model = BaoCaoCongNo
         fields = ['Thang', 'Nam', 'ct_bccongno__MaKH__MaKhachHang', 'ct_bccongno__MaKH__HoTen', 'ct_bccongno__NoDau', 'ct_bccongno__NoCuoi']
+        
 class BaoCaoCongNoViewSet(viewsets.ModelViewSet):
     queryset = BaoCaoCongNo.objects.all()
     serializer_class = BaoCaoCongNoSerializer
     permission_classes = [DynamicModelPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_class = BaoCaoCongNoFilter
-    
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )    
+
 # HoaDon filterset
 class HoaDonFilter(FilterSet):
     maHD = NumberFilter(field_name='MaHD')
@@ -313,3 +433,12 @@ class HoaDonViewSet(viewsets.ModelViewSet):
     permission_classes = [DynamicModelPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_class = HoaDonFilter
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(
+                {"detail": f"Lỗi trigger hoặc database: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
