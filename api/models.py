@@ -36,7 +36,7 @@ class Sach(models.Model):
     SLTon = models.IntegerField(blank=True, default=0, null=True)
 
     def __str__(self):
-        return self.DauSach.TenSach
+        return self.MaDauSach.TenSach
 
 class KhachHang(models.Model):
     MaKhachHang = models.AutoField(primary_key=True)

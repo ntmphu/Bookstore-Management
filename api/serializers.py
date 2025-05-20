@@ -58,26 +58,42 @@ class PhieuThuTienSerializer(serializers.ModelSerializer):
         model = PhieuThuTien
         fields = '__all__'
 
-class BaoCaoTonSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BaoCaoTon
-        fields = '__all__'
-
 class CTBCTonSerializer(serializers.ModelSerializer):
+    MaSach = SachSerializer()  # Nested serializer for Sach details
+    
     class Meta:
         model = CT_BCTon
-        fields = '__all__'
+        fields = ['MaSach', 'TonDau', 'PhatSinh', 'TonCuoi']
 
-class BaoCaoCongNoSerializer(serializers.ModelSerializer):
+class BaoCaoTonSerializer(serializers.ModelSerializer):
+    chitiet = serializers.SerializerMethodField()
+
     class Meta:
-        model = BaoCaoCongNo
-        fields = '__all__'
+        model = BaoCaoTon
+        fields = ['MaBCTon', 'Thang', 'Nam', 'chitiet']
 
+    def get_chitiet(self, obj):
+        ct_bcton = CT_BCTon.objects.filter(MaBCTon=obj)
+        return CTBCTonSerializer(ct_bcton, many=True).data
+    
 class CTBCCongNoSerializer(serializers.ModelSerializer):
+    MaKH = KhachHangSerializer()  # Nested serializer for KhachHang details
+    
     class Meta:
         model = CT_BCCongNo
-        fields = '__all__'
+        fields = ['MaKH', 'NoDau', 'PhatSinh', 'NoCuoi']
 
+class BaoCaoCongNoSerializer(serializers.ModelSerializer):
+    chitiet = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BaoCaoCongNo
+        fields = ['MaBCCN', 'Thang', 'Nam', 'chitiet']
+
+    def get_chitiet(self, obj):
+        ct_bccongno = CT_BCCongNo.objects.filter(MaBCCN=obj)
+        return CTBCCongNoSerializer(ct_bccongno, many=True).data
+    
 class ThamSoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ThamSo
