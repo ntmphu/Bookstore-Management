@@ -4,7 +4,7 @@ from .models import (
     TheLoai, DauSach, TacGia, Sach, KhachHang,
     PhieuNhapSach, CT_NhapSach, HoaDon, CT_HoaDon, PhieuThuTien,
     BaoCaoTon, CT_BCTon, BaoCaoCongNo, CT_BCCongNo, ThamSo,
-    GroupModelPermission
+    GroupModelPermission, UserProfile
 )
 
 class TheLoaiSerializer(serializers.ModelSerializer):
@@ -106,6 +106,25 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'groups', 'first_name', 'last_name']
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['gioiTinh']
+
+class UserSerializer(serializers.ModelSerializer):
+    gioiTinh = serializers.CharField(source='profile.gioiTinh', required=False)
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'gioiTinh']
+
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop('profile', {})
+        if profile_data and 'gioiTinh' in profile_data:
+            instance.profile.gioiTinh = profile_data['gioiTinh']
+            instance.profile.save()
+        return super().update(instance, validated_data)
 
 class CreateUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

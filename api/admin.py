@@ -18,6 +18,7 @@ admin.site.register(CT_BCTon)
 admin.site.register(BaoCaoCongNo)
 admin.site.register(CT_BCCongNo)
 admin.site.register(ThamSo)
+admin.site.register(UserProfile)
 
 @admin.register(GroupModelPermission)
 class GroupModelPermissionAdmin(admin.ModelAdmin):

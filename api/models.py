@@ -5,6 +5,27 @@ from django.contrib.auth.models import Group as NhomNguoiDung
 from django.contrib.auth.models import Permission as ChucNang
 from django.conf import settings
 
+# Add this after the imports
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+# Add this with your other models
+class UserProfile(models.Model):
+    GENDER_CHOICES = [
+        ('Nam', 'Nam'),
+        ('Nữ', 'Nữ'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    gioiTinh = models.CharField(max_length=3, choices=GENDER_CHOICES, default='Nam')
+
+    def __str__(self):
+        return f"{self.user.username}'s profile"
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
 class TheLoai(models.Model):
     MaTheLoai = models.AutoField(primary_key=True)
     TenTheLoai = models.CharField(max_length=200)

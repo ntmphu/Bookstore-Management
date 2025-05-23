@@ -64,13 +64,17 @@ class UserManagementViewSet(viewsets.ModelViewSet):
         serializer = CreateUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            # Set gender if provided
+            if 'gioiTinh' in request.data:
+                user.profile.gioiTinh = request.data['gioiTinh']
+                user.profile.save()
+            # Set group
             group_name = request.data.get('role')
             if group_name in VALID_GROUPS:
                 group = Group.objects.get(name=group_name)
                 user.groups.add(group)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     @action(detail=True, methods=['post'])
     def change_password(self, request, pk=None):
         user = self.get_object()
