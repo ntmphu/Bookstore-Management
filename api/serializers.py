@@ -8,91 +8,595 @@ from .models import (
 )
 
 class TheLoaiSerializer(serializers.ModelSerializer):
+    MaTheLoai = serializers.SerializerMethodField()
+
     class Meta:
         model = TheLoai
-        fields = '__all__'
+        fields = ['MaTheLoai', 'TenTheLoai']
+
+    def get_MaTheLoai(self, obj):
+        return f"TL{obj.MaTheLoai:03d}"
 
 class DauSachSerializer(serializers.ModelSerializer):
+    MaDauSach = serializers.SerializerMethodField()
+
+    # Write-only fields for input
+    TenTheLoai_input = serializers.CharField(write_only=True, required=False)
+    TenTacGia_input = serializers.ListField(
+        child=serializers.CharField(), write_only=True, required=False
+    )
+
+    # Read-only display fields
+    TenTheLoai = serializers.SerializerMethodField()
+    TenTacGia = serializers.SerializerMethodField()
+
     class Meta:
         model = DauSach
-        fields = '__all__'
+        fields = [
+            'MaDauSach',
+            'TenSach',
+            'TenTheLoai_input',
+            'TenTacGia_input',
+            'TenTheLoai',
+            'TenTacGia',
+        ]
+
+    def get_MaDauSach(self, obj):
+        return f"DS{obj.MaDauSach:03d}"
+
+    def get_TenTheLoai(self, obj):
+        return obj.MaTheLoai.TenTheLoai if obj.MaTheLoai else None
+
+    def get_TenTacGia(self, obj):
+        return [tg.TenTG for tg in obj.MaTG.all()]
+
+    def create(self, validated_data):
+        ten_theloai = validated_data.pop('TenTheLoai_input', None)
+        ten_tacgia_list = validated_data.pop('TenTacGia_input', [])
+
+        # ❌ Validate TheLoai exists
+        try:
+            theloai_obj = TheLoai.objects.get(TenTheLoai=ten_theloai)
+        except TheLoai.DoesNotExist:
+            raise serializers.ValidationError({
+                'TenTheLoai_input': f"Không tồn tại tên thể loại '{ten_theloai}'. Vui lòng thêm mới thể loại."
+            })
+
+        # ❌ Validate all TacGia exist
+        tacgia_objs = []
+        missing_tacgia = []
+        for ten_tg in ten_tacgia_list:
+            try:
+                tg_obj = TacGia.objects.get(TenTG=ten_tg)
+                tacgia_objs.append(tg_obj)
+            except TacGia.DoesNotExist:
+                missing_tacgia.append(ten_tg)
+
+        if missing_tacgia:
+            raise serializers.ValidationError({
+                'TenTacGia_input': f"Không tồn tại tác giả: {[name for name in missing_tacgia]}. Vui lòng thêm mới tác giả."
+            })
+
+        # ✅ Create DauSach
+        dausach = DauSach.objects.create(
+            MaTheLoai=theloai_obj,
+            **validated_data
+        )
+        dausach.MaTG.set(tacgia_objs)
+        return dausach
 
 class TacGiaSerializer(serializers.ModelSerializer):
+    MaTG = serializers.SerializerMethodField()
+
     class Meta:
         model = TacGia
-        fields = '__all__'
+        fields = ['MaTG', 'TenTG']
 
+    def get_MaTG(self, obj):
+        return f"TL{obj.MaTG:03d}"
 
 class SachSerializer(serializers.ModelSerializer):
+    MaSach = serializers.SerializerMethodField()
+    TenDauSach_input = serializers.CharField(write_only=True, required=True)
+    TenDauSach = serializers.SerializerMethodField()
+
     class Meta:
         model = Sach
-        fields = '__all__'
+        fields = ['MaSach', 'TenDauSach_input', 'TenDauSach', 'NXB', 'NamXB', 'SLTon']
+        read_only_fields = ['SLTon']
+
+    def get_MaSach(self, obj):
+        return f"S{obj.MaSach:03d}"
+
+    def get_TenDauSach(self, obj):
+        return obj.MaDauSach.TenSach
+
+    def create(self, validated_data):
+        ten_dausach = validated_data.pop('TenDauSach_input', None)
+
+        # Validate existence of DauSach
+        try:
+            dausach = DauSach.objects.get(TenSach=ten_dausach)
+        except DauSach.DoesNotExist:
+            raise serializers.ValidationError({
+                'TenDauSach_input': f"Không tồn tại đầu sách '{ten_dausach}'. Vui lòng thêm mới đầu sách."
+            })
+
+        # Create the Sach object
+        sach = Sach.objects.create(MaDauSach=dausach, **validated_data)
+        return sach
 
 class KhachHangSerializer(serializers.ModelSerializer):
+    MaKhachHang = serializers.SerializerMethodField()
+
     class Meta:
         model = KhachHang
-        fields = '__all__'
+        fields = ['MaKhachHang', 'HoTen', 'DiaChi', 'DienThoai', 'Email', 'SoTienNo']
+        read_only_fields = ['SoTienNo']
+
+    def get_MaKhachHang(self, obj):
+        return f"KH{obj.MaKhachHang:03d}"
+    
+    def create(self, validated_data):
+        # Validate unique DienThoai
+        if KhachHang.objects.filter(DienThoai=validated_data['DienThoai']).exists():
+            raise serializers.ValidationError({
+                'DienThoai': f"Số điện thoại '{validated_data['DienThoai']}' đã tồn tại. Vui lòng nhập số điện thoại khác."
+            })
+
+        # Create the KhachHang object
+        khachhang = KhachHang.objects.create(**validated_data)
+        return khachhang
 
 class PhieuNhapSachSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PhieuNhapSach
-        fields = '__all__'
-
-class CTNhapSachSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CT_NhapSach
-        fields = '__all__'
-
-class HoaDonSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HoaDon
-        fields = '__all__'
-
-class CTHoaDonSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CT_HoaDon
-        fields = '__all__'
-
-class PhieuThuTienSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PhieuThuTien
-        fields = '__all__'
-
-class CTBCTonSerializer(serializers.ModelSerializer):
-    MaSach = SachSerializer()  # Nested serializer for Sach details
+    MaPhieuNhap = serializers.SerializerMethodField()
+    NguoiNhap = serializers.SerializerMethodField()
+    username = serializers.CharField(write_only=True, required=True)
+    NgayNhap = serializers.DateField(format="%d/%m/%Y", input_formats=["%d/%m/%Y"], required=True)
     
     class Meta:
+        model = PhieuNhapSach
+        fields = ['MaPhieuNhap', 'NgayNhap', 'NguoiNhap', 'username']    
+
+    def get_MaPhieuNhap(self, obj):
+        return f"PN{obj.MaPhieuNhap:03d}"
+    
+    def get_NguoiNhap(self, obj):
+        return f'{obj.NguoiNhap.last_name} {obj.NguoiNhap.first_name}'
+    
+    def create(self, validated_data):
+        username = validated_data.pop('username', None)
+        
+        # Validate existence of User
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({
+                'username': f"Không tồn tại người dùng '{username}'. Vui lòng nhập đúng tên người dùng."
+            })
+
+        # Create the PhieuNhapSach object
+        phieunhapsach = PhieuNhapSach.objects.create(NguoiNhap=user, **validated_data)
+        return phieunhapsach
+
+class CTNhapSachSerializer(serializers.ModelSerializer):
+    MaPhieuNhap_input = serializers.CharField(write_only=True, required=True)
+    MaSach_input = serializers.CharField(write_only=True, required=True)
+    SLNhap = serializers.IntegerField(required=True)
+    GiaNhap = serializers.DecimalField(max_digits=15, decimal_places=0, required=True)
+    
+    MaCT_NhapSach = serializers.SerializerMethodField()
+    MaPhieuNhap = serializers.SerializerMethodField()
+    MaSach = serializers.SerializerMethodField()
+    TenSach = serializers.CharField(source='MaSach.MaDauSach.TenSach', read_only=True)
+
+    class Meta:
+        model = CT_NhapSach
+        fields = ['MaCT_NhapSach', 'MaPhieuNhap_input', 'MaSach_input', 'MaPhieuNhap', 'MaSach', 'TenSach', 'SLNhap', 'GiaNhap']
+
+    def validate_SLNhap(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("SLNhap: Số lượng nhập phải lớn hơn 0.")
+        return value
+
+    def validate(self, data):
+        thamso = ThamSo.objects.first()
+        if not thamso:
+            raise serializers.ValidationError("Tham số hệ thống chưa được cấu hình.")
+
+        sl_nhap = data.get("SLNhap")
+        ma_sach_input = data.get("MaSach_input")
+        ma_phieu_nhap_input = data.get("MaPhieuNhap_input")
+        
+        # Validate required fields
+        if not ma_phieu_nhap_input:
+            raise serializers.ValidationError({"MaPhieuNhap_input": "Phải nhập mã phiếu nhập."})
+        
+        if not ma_sach_input:
+            raise serializers.ValidationError({"MaSach_input": "Phải nhập mã sách."})
+        
+        if not sl_nhap:
+            raise serializers.ValidationError({"SLNhap": "Phải nhập số lượng nhập."})
+
+        if not ma_phieu_nhap_input:
+            raise serializers.ValidationError({"MaPhieuNhap_input": "Phải nhập mã phiếu nhập."})
+        
+        try:    
+            ma_phieu_nhap = int(ma_phieu_nhap_input.replace('PN', ''))
+            phieunhapsach = PhieuNhapSach.objects.get(MaPhieuNhap=ma_phieu_nhap)
+        except (ValueError, PhieuNhapSach.DoesNotExist):
+            raise serializers.ValidationError({
+                'MaPhieuNhap_input': f"Không tồn tại mã phiếu nhập '{ma_phieu_nhap_input}'. Vui lòng nhập đúng mã phiếu nhập."
+            })
+
+        try:
+            ma_sach = int(ma_sach_input.replace('S', ''))
+            sach = Sach.objects.get(MaSach=ma_sach)
+        except (ValueError, Sach.DoesNotExist):
+            raise serializers.ValidationError({
+                'MaSach_input': f"Không tồn tại mã sách '{ma_sach_input}'. Vui lòng nhập đúng mã sách."
+            })
+
+        # Rule 1: SLNhap >= SLNhapTT
+        if sl_nhap < thamso.SLNhapTT:
+            raise serializers.ValidationError({
+                "SLNhap": f"Số lượng nhập phải ≥ {thamso.SLNhapTT}."
+            })
+
+        # Rule 2: SLTon must not exceed TonTD
+        # Get current SLTon
+        current_slton = sach.SLTon
+        if current_slton > thamso.TonTD:
+            raise serializers.ValidationError({
+                "MaSach_input, SLNhap": f"Tồn của sách {sach.MaSach}: {sach.MaDauSach.TenSach}, vượt quá tồn tối đa ({thamso.TonTD})."
+            })
+        
+        # Temporarily attach sach for use in create()
+        data['MaPhieuNhap'] = phieunhapsach
+        data['MaSach'] = sach
+        return data
+
+
+    def get_MaCT_NhapSach(self, obj):
+        return f"CTNS{obj.id:03d}"
+
+    def get_MaPhieuNhap(self, obj):
+        return f"PN{obj.MaPhieuNhap.MaPhieuNhap:03d}"
+    
+    def get_MaSach(self, obj):
+        return f"S{obj.MaSach.MaSach:03d}"
+    
+    def create(self, validated_data):
+        # These fields were added during validation
+        validated_data.pop('MaPhieuNhap_input', None)
+        validated_data.pop('MaSach_input', None)
+
+        return CT_NhapSach.objects.create(**validated_data)
+
+class CTHoaDonSerializer(serializers.ModelSerializer):
+    MaHD_input = serializers.CharField(write_only=True, required=True)
+    MaSach_input = serializers.CharField(write_only=True, required=True)
+    TenSach = serializers.CharField(source='MaSach.MaDauSach.TenSach', read_only=True)
+
+    id = serializers.SerializerMethodField()
+    MaHD = serializers.SerializerMethodField()
+    MaSach = serializers.SerializerMethodField()
+    GiaBan = serializers.DecimalField(max_digits=15, decimal_places=0, read_only=True)
+    ThanhTien = serializers.DecimalField(max_digits=15, decimal_places=0, read_only=True)
+    SLBan = serializers.IntegerField(required=True)
+
+    class Meta:
+        model = CT_HoaDon
+        fields = ['id', 'MaHD', 'MaHD_input', 'MaSach', 'MaSach_input', 'TenSach', 'SLBan', 'GiaBan', 'ThanhTien']
+        read_only_fields = ['GiaBan', 'ThanhTien']
+
+    def get_id(self, obj):
+        return f"CTHD{obj.id:03d}"
+
+    def get_MaHD(self, obj):
+        return f"HD{obj.MaHD.MaHD:03d}"
+    
+    def get_MaSach(self, obj):
+        return f"S{obj.MaSach.MaSach:03d}"
+
+    def validate_SLBan(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Số lượng bán phải lớn hơn 0.")
+        return value
+
+    def validate(self, data):
+        ma_hd_input = data.get('MaHD_input')
+        
+        if not ma_hd_input:
+            raise serializers.ValidationError({"MaHD_input": "Mã hóa đơn là bắt buộc."})
+        
+        ma_sach_input = data.get('MaSach_input')
+        if not ma_sach_input:
+            raise serializers.ValidationError({"MaSach_input": "Mã sách là bắt buộc."})
+
+        try:
+            ma_hd = int(ma_hd_input.replace('HD', ''))
+            hoadon = HoaDon.objects.get(MaHD=ma_hd)
+        except (ValueError, HoaDon.DoesNotExist):
+            raise serializers.ValidationError({"MaHD_input": "Mã hóa đơn {ma_hd} không tồn tại."})
+
+        try:
+            ma_sach = int(ma_sach_input.replace('S', ''))
+            sach = Sach.objects.get(MaSach=ma_sach)
+        except (ValueError, Sach.DoesNotExist):
+            raise serializers.ValidationError({"MaSach_input": "Mã sách {ma_sach} không tồn tại."})
+
+        thamso = ThamSo.objects.first()
+        if not thamso:
+            raise serializers.ValidationError("Tham số hệ thống chưa được cấu hình.")
+
+        latest_pn = PhieuNhapSach.objects.filter(MaSach=sach).order_by('-NgayNhap').first()
+
+        if not latest_pn:
+            raise serializers.ValidationError("Không tìm thấy giá nhập cho sách này.")
+
+        slban = data.get('SLBan')
+
+        if self.instance:
+            old_slban = self.instance.SLBan
+            diff = slban - old_slban
+        else:
+            diff = slban
+
+        new_slton = sach.SLTon - diff
+
+        if new_slton < thamso.TonTT:
+            raise serializers.ValidationError({
+                "MaSach_input, SLBan": f"Số lượng tồn sau khi bán ({new_slton}) nhỏ hơn số lượng tồn tối thiểu ({thamso.TonTT})."
+            })
+
+        gianhap = (
+            CT_NhapSach.objects
+            .filter(MaSach=sach)
+            .order_by('-MaPhieuNhap__NgayNhap')
+            .first()
+        )
+
+        giaban = int(gianhap.GiaNhap * thamso.TiLe)
+        data['MaHD'] = hoadon
+        data['MaSach'] = sach
+        data['GiaBan'] = giaban
+        data['ThanhTien'] = giaban * slban
+
+        khachhang = hoadon.MaKH
+        new_sotienno = khachhang.SoTienNo + data['ThanhTien']
+        if new_sotienno > thamso.NoTD:
+            raise serializers.ValidationError({
+                'MaHD_input, MaSach_input, SLBan': f"Khách hàng KH{khachhang.MaKhachHang:03d}: {khachhang.HoTen} nợ quá số tiền nợ tối đa ({thamso.NoTD}). Nợ hiện tại: {khachhang.SoTienNo}, nợ mới: {new_sotienno}."
+            })
+
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('MaHD_input', None)
+        validated_data.pop('MaSach_input', None)
+        return CT_HoaDon.objects.create(**validated_data)
+    
+    def update(self, instance, validated_data):
+        # Update fields
+        instance.SLBan = validated_data.get('SLBan', instance.SLBan)
+        thamso = ThamSo.objects.first()
+        
+        gianhap = (
+            CT_NhapSach.objects
+            .filter(MaSach=instance.MaSach)
+            .order_by('-MaPhieuNhap__NgayNhap')
+            .first()
+        )
+
+        instance.GiaBan = gianhap.GiaNhap * thamso.TiLe
+        instance.ThanhTien = instance.GiaBan * instance.SLBan
+        instance.save()
+
+        # Cập nhật hóa đơn
+        return instance
+    
+class HoaDonSerializer(serializers.ModelSerializer):
+    NgayLap = serializers.DateField(format="%d/%m/%Y", input_formats=["%d/%m/%Y"], required=True)
+    NguoiLapHD_input = serializers.CharField(write_only=True, required=True)
+    MaKH_input = serializers.CharField(write_only=True, required=True)
+    SoTienTra = serializers.DecimalField(max_digits=15, decimal_places=0, required=False)
+    MaHD = serializers.SerializerMethodField()
+    MaKH = serializers.SerializerMethodField()
+    HoTen = serializers.CharField(source='MaKH.HoTen', read_only=True)
+    NguoiLapHD = serializers.SerializerMethodField()
+
+    class Meta:
+        model = HoaDon
+        fields = [
+            'MaHD', 'MaKH', 'MaKH_input', 'HoTen', 'NgayLap', 'NguoiLapHD_input', 'NguoiLapHD',
+            'SoTienTra', 'TongTien', 'ConLai'
+        ]
+        read_only_fields = ['TongTien', 'ConLai']
+
+    def get_MaHD(self, obj):
+        return f"HD{obj.MaHD:03d}"
+
+    def get_MaKH(self, obj):
+        return f"KH{obj.MaKH.MaKhachHang:03d}"
+    
+    def get_NguoiLapHD(self, obj):
+        return f'{obj.NguoiLapHD.last_name} {obj.NguoiLapHD.first_name}'
+
+    def validate_SoTienTra(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Số tiền trả không được âm.")
+        return value
+    
+    def update(self, instance, validated_data):
+        sotientra = validated_data.get("SoTienTra", instance.SoTienTra)
+        instance.SoTienTra = sotientra
+        instance.ConLai = instance.TongTien - instance.SoTienTra
+        instance.save()
+        return instance
+    
+    def validate(self, data):
+        ma_kh_input = data.get('MaKH_input')
+        nguoi_lap_hd_input = data.get('NguoiLapHD_input')
+        # Validate required fields       
+        if not ma_kh_input:
+            raise serializers.ValidationError({"MaKH_input": "Phải nhập mã khách hàng."})
+        
+        if not nguoi_lap_hd_input:
+            raise serializers.ValidationError({"NguoiLapHD_input": "Phải nhập người lập hóa đơn."})
+
+        try:
+            ma_kh = int(ma_kh_input.replace('KH', ''))
+            khachhang = KhachHang.objects.get(MaKhachHang=ma_kh)
+        except (ValueError, KhachHang.DoesNotExist):
+            raise serializers.ValidationError({
+                'MaKH_input': f"Không tồn tại mã khách hàng '{ma_kh_input}'. Vui lòng nhập đúng mã khách hàng."
+            })
+
+        try:
+            user = User.objects.get(username=nguoi_lap_hd_input)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"NguoiLapHD_input": f"Không tồn tại người dùng '{nguoi_lap_hd_input}'."})
+
+        data['NguoiLapHD'] = user
+        data['MaKH'] = khachhang
+        return data
+    
+    def create(self, validated_data):
+        # These fields were added during validation
+        validated_data.pop('MaKH_input', None)
+        validated_data.pop('NguoiLapHD_input', None)
+
+        return HoaDon.objects.create(**validated_data)
+    
+class PhieuThuTienSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(write_only=True, required=True)
+    NgayThu = serializers.DateField(format="%d/%m/%Y", input_formats=["%d/%m/%Y"], required=True)
+    MaKH_input = serializers.CharField(write_only=True, required=True)
+    SoTienThu = serializers.DecimalField(max_digits=15, decimal_places=0, required=True)
+
+    MaKH = serializers.SerializerMethodField()
+    MaPhieuThu = serializers.SerializerMethodField()
+    TenKH = serializers.CharField(source='MaKH.HoTen', read_only=True)
+    NguoiThu = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PhieuThuTien
+        fields = ['MaPhieuThu', 'MaKH', 'TenKH', 'SoTienThu', 'NguoiThu', 'NgayThu', 'MaKH_input', 'username']
+
+    def get_MaPhieuThu(self, obj):
+        return f"PT{obj.MaPhieuThu:03d}"
+    
+    def get_NguoiThu(self, obj):
+        return f'{obj.NguoiThu.last_name} {obj.NguoiThu.first_name}'
+    
+    def get_MaKH(self, obj):
+        return f"KH{obj.MaKH.MaKhachHang:03d}"
+
+    def validate_SoTienThu(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Số tiền thu phải lớn hơn 0.")
+        return value    
+
+    def validate(self, data):
+        username = data.get('username')
+        ma_kh_input = data.get('MaKH_input')
+        sotienthu = data.get('SoTienThu')
+
+        # Validate required fields
+        if not ma_kh_input:
+            raise serializers.ValidationError({"MaKH_input": "Phải nhập mã khách hàng."})
+        
+        if not username:
+            raise serializers.ValidationError({"username": "Phải nhập tên người dùng."})
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"username": f"Không tồn tại người dùng '{username}'."})
+        
+        try:
+            ma_kh = int(ma_kh_input.replace('KH', ''))
+            khachhang = KhachHang.objects.get(MaKhachHang=ma_kh)
+        except (ValueError, KhachHang.DoesNotExist):
+            raise serializers.ValidationError({
+                'MaKH_input': f"Không tồn tại mã khách hàng '{ma_kh_input}'. Vui lòng nhập đúng mã khách hàng."
+            })
+
+        # Validate SoTienThu
+        if sotienthu > khachhang.SoTienNo:
+            raise serializers.ValidationError({
+                'SoTienThu': f"Số tiền thu ({sotienthu}) không được vượt quá số tiền nợ của khách hàng ({khachhang.SoTienNo})."
+            })
+        
+        data['NguoiThu'] = user
+        data['MaKH'] = khachhang
+        return data
+    
+    def create(self, validated_data):
+        # These fields were added during validation
+        validated_data.pop('MaKH_input', None)
+        validated_data.pop('username', None)
+
+        return PhieuThuTien.objects.create(**validated_data)
+
+class CT_BCTonSerializer(serializers.ModelSerializer):
+    TenSach = serializers.CharField(source='MaSach.MaDauSach.TenSach', read_only=True)
+    MaSach = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
+
+    class Meta:
         model = CT_BCTon
-        fields = ['MaSach', 'TonDau', 'PhatSinh', 'TonCuoi']
+        fields = ['id', 'MaSach', 'TenSach', 'TonDau', 'PhatSinh', 'TonCuoi']
+        read_only_fields = fields  # All fields are read-only
+
+    def get_id(self, obj):
+        return f"CTBCT{obj.id:03d}"
+
+    def get_MaSach(self, obj):
+        return f"S{obj.MaSach.MaSach:03d}"
 
 class BaoCaoTonSerializer(serializers.ModelSerializer):
-    chitiet = serializers.SerializerMethodField()
+    Thang = serializers.DateField(format="%m/%Y")
+    chi_tiet_ton = CT_BCTonSerializer(many=True, read_only=True)
+    MaBCTon = serializers.SerializerMethodField()
 
     class Meta:
         model = BaoCaoTon
-        fields = ['MaBCTon', 'Thang', 'Nam', 'chitiet']
+        fields = ['MaBCTon', 'Thang', 'chi_tiet_ton']
+        read_only_fields = fields
+    
+    def get_MaBCTon(self, obj):
+        return f"BCT{obj.MaBCTon:03d}"
+    
+class CT_BCCNSerializer(serializers.ModelSerializer):
+    TenKH = serializers.CharField(source='MaKH.HoTen', read_only=True)
+    MaKH = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
 
-    def get_chitiet(self, obj):
-        ct_bcton = CT_BCTon.objects.filter(MaBCTon=obj)
-        return CTBCTonSerializer(ct_bcton, many=True).data
-    
-class CTBCCongNoSerializer(serializers.ModelSerializer):
-    MaKH = KhachHangSerializer()  # Nested serializer for KhachHang details
-    
     class Meta:
         model = CT_BCCongNo
-        fields = ['MaKH', 'NoDau', 'PhatSinh', 'NoCuoi']
+        fields = ['id', 'MaKH', 'TenKH', 'NoDau', 'PhatSinh', 'NoCuoi']
+        read_only_fields = fields
+
+    def get_MaKH(self, obj):
+        return f"KH{obj.MaKH.MaKhachHang:03d}"
+    
+    def get_id(self, obj):
+        return f"CTBCN{obj.id:03d}"
 
 class BaoCaoCongNoSerializer(serializers.ModelSerializer):
-    chitiet = serializers.SerializerMethodField()
+    Thang = serializers.DateField(format="%m/%Y")
+    chi_tiet_no = CT_BCCNSerializer(many=True, read_only=True)
+    MaBCCN = serializers.SerializerMethodField()
 
     class Meta:
         model = BaoCaoCongNo
-        fields = ['MaBCCN', 'Thang', 'Nam', 'chitiet']
+        fields = ['MaBCCN', 'Thang', 'chi_tiet_no']
+        read_only_fields = fields
 
-    def get_chitiet(self, obj):
-        ct_bccongno = CT_BCCongNo.objects.filter(MaBCCN=obj)
-        return CTBCCongNoSerializer(ct_bccongno, many=True).data
+    def get_MaBCCN(self, obj):
+        return f"BCCN{obj.MaBCCN:03d}"
     
 class ThamSoSerializer(serializers.ModelSerializer):
     class Meta:
