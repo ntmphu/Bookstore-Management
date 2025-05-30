@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from .models import (
     TheLoai, DauSach, TacGia, Sach, KhachHang,
     PhieuNhapSach, CT_NhapSach, HoaDon, CT_HoaDon, PhieuThuTien,
     BaoCaoTon, CT_BCTon, BaoCaoCongNo, CT_BCCongNo, ThamSo,
-    GroupModelPermission, UserProfile
+   UserProfile
 )
 
 class TheLoaiSerializer(serializers.ModelSerializer):
@@ -99,36 +99,39 @@ class ThamSoSerializer(serializers.ModelSerializer):
         model = ThamSo
         fields = '__all__'
     
-VALID_GROUPS = ['NguoiNhap', 'ThuNgan']
-class UserSerializer(serializers.ModelSerializer):
-    groups = serializers.StringRelatedField(many=True, read_only=True)
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'groups', 'first_name', 'last_name']
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields = ['gioiTinh']
+VALID_GROUPS = ['NguoiNhap', 'ThuNgan', 'QuanLi']
 
 class UserSerializer(serializers.ModelSerializer):
     gioiTinh = serializers.CharField(source='profile.gioiTinh', required=False)
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'gioiTinh']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'gioiTinh', 'role']
+
+    def get_role(self, obj):
+        return obj.groups.first().name if obj.groups.exists() else None
 
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', {})
+        role = validated_data.pop('role', None)
+        
         if profile_data and 'gioiTinh' in profile_data:
             instance.profile.gioiTinh = profile_data['gioiTinh']
             instance.profile.save()
+            
+        if role:
+            # Remove from current groups
+            instance.groups.clear()
+            # Add to new group
+            group = Group.objects.get(name=role)
+            instance.groups.add(group)
+            
         return super().update(instance, validated_data)
 
 class CreateUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    role = serializers.ChoiceField(choices=VALID_GROUPS, write_only=True)
+    role = serializers.ChoiceField(choices=[(r, r) for r in VALID_GROUPS], write_only=True)
 
     class Meta:
         model = User
@@ -144,10 +147,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         user = User.objects.create_user(**validated_data)
         user.set_password(password)
+        # Add user to the role group
+        group = Group.objects.get(name=role)
+        user.groups.add(group)
         user.save()
         return user
-
-class GroupModelPermissionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GroupModelPermission
-        fields = '__all__'

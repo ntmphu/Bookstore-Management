@@ -20,7 +20,6 @@ admin.site.register(CT_BCCongNo)
 admin.site.register(ThamSo)
 admin.site.register(UserProfile)
 
-@admin.register(GroupModelPermission)
 class GroupModelPermissionAdmin(admin.ModelAdmin):
     list_display = ('group', 'model_name', 'can_view', 'can_add', 'can_change', 'can_delete')
     list_filter = ('group', 'model_name')
