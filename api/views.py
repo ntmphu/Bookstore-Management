@@ -15,7 +15,7 @@ from .serializers import (
     DauSachSerializer, TacGiaSerializer, TheLoaiSerializer, 
     PhieuNhapSachSerializer, CTNhapSachSerializer,
     BaoCaoTonSerializer, CT_BCTonSerializer, BaoCaoCongNoSerializer, CT_BCCNSerializer, ThamSoSerializer,
-    GroupModelPermissionSerializer
+    
 )
 
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, NumberFilter, CharFilter, DateFilter
