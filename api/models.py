@@ -40,6 +40,13 @@ class TacGia(models.Model):
     def __str__(self):
         return self.TenTG
 
+class NXB(models.Model):
+    MaNXB = models.AutoField(primary_key=True)
+    TenNXB = models.CharField(max_length=200, unique=True)
+
+    def __str__(self):
+        return self.TenNXB
+
 class DauSach(models.Model):
     MaDauSach = models.AutoField(primary_key=True)
     TenSach = models.CharField(max_length=200, unique=True)
@@ -52,7 +59,7 @@ class DauSach(models.Model):
 class Sach(models.Model):
     MaSach = models.AutoField(primary_key=True)
     MaDauSach = models.ForeignKey(DauSach, on_delete=models.CASCADE, related_name='sach')
-    NXB = models.CharField(max_length=200)
+    NXB = models.ForeignKey(NXB, on_delete=models.CASCADE, related_name='sach')
     NamXB = models.IntegerField()
     SLTon = models.PositiveIntegerField(blank=True, default=0, null=True)
 
@@ -81,7 +88,7 @@ class PhieuNhapSach(models.Model):
     NguoiNhap = models.ForeignKey(
         User,
         on_delete=models.RESTRICT,
-        related_name='NguoiNhap',
+        related_name='PhieuNhapSach',
         verbose_name='Người nhập'
     )
     MaSach = models.ManyToManyField(Sach, through='CT_NhapSach', related_name='PhieuNhapSach')
@@ -164,7 +171,7 @@ class PhieuThuTien(models.Model):
     NguoiThu = models.ForeignKey(
         User,
         on_delete=models.RESTRICT,
-        related_name='NguoiThu',
+        related_name='PhieuThuTien',
         verbose_name='Người thu'
     )
     SoTienThu = models.DecimalField(max_digits=15, decimal_places=0)
@@ -210,7 +217,7 @@ class HoaDon(models.Model):
     NguoiLapHD = models.ForeignKey(
         User,
         on_delete=models.RESTRICT,
-        related_name='NguoiLapHD',
+        related_name='HoaDon',
         verbose_name='Người lập Hóa Đơn'
     )
     TongTien = models.DecimalField(max_digits=15, decimal_places=0, default=0, editable=False, null=True)
