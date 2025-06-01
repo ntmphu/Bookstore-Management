@@ -193,7 +193,7 @@ class PhieuNhapSachSerializer(serializers.ModelSerializer):
         return f"PN{obj.MaPhieuNhap:03d}"
     
     def get_NguoiNhap(self, obj):
-        return f'{obj.NguoiNhap.lastname} {obj.NguoiNhap.firstname}'
+        return f'{obj.NguoiNhap.last_name} {obj.NguoiNhap.first_name}'
     
     def create(self, validated_data):
         # username = validated_data.pop('username', None)
