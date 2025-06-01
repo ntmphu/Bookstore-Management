@@ -7,6 +7,9 @@ from .models import (
     UserProfile
 )
 
+class UserProfile():
+    serializers.ModelSerializer
+
 class TheLoaiSerializer(serializers.ModelSerializer):
     MaTheLoai = serializers.SerializerMethodField()
 
@@ -642,27 +645,27 @@ class ThamSoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate_SLNhapTT(self, value):
-        if value <= 0 or not isinstance(value, int):
+        if not isinstance(int(value), int) or value <= 0 :
             raise serializers.ValidationError("Số lượng nhập tối thiểu phải là số nguyên dương.")
         return value
     
     def validate_TonTD(self, value):
-        if value <= 0 or not isinstance(value, int):
+        if not isinstance(int(value), int) or value <= 0:
             raise serializers.ValidationError("Tồn tối đa phải là số nguyên dương.")
         return value
 
     def validate_NoTD(self, value):
-        if value <= 0 or not isinstance(value, int):
+        if not isinstance(int(value), int) or value <= 0:
             raise serializers.ValidationError("Nợ tối đa phải là số nguyên dương.")
         return value
     
     def validate_TonTT(self, value):
-        if value <= 0 or not isinstance(value, int):
+        if not isinstance(int(value), int) or value <= 0:
             raise serializers.ValidationError("Tồn tối thiểu phải là số nguyên dương.")
         return value
     
     def validate_TiLe(self, value):
-        if not isinstance(value, float) or value <= 0:
+        if not isinstance(float(value), float) or value <= 0:
             raise serializers.ValidationError("Tỉ lệ phải là số thực duơng.")
         return value
     
@@ -702,8 +705,8 @@ class UserSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    role = serializers.ChoiceField(choices=[(r, r) for r in VALID_GROUPS], write_only=True)
+    password = serializers.CharField()
+    role = serializers.ChoiceField(choices=[r for r in VALID_GROUPS], write_only=True)
 
     class Meta:
         model = User

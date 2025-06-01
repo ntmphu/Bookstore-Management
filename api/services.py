@@ -56,7 +56,7 @@ def generate_baocaoton_for_month(target_month: date = None):
 
 def generate_baocaocongno_for_month(target_month: date = None):
     if not target_month:
-        target_month = first_day_of_month(date.today())z
+        target_month = first_day_of_month(date.today())
 
     # Get previous month for NoDau lookup
     prev_month = prev_month_date(target_month)
