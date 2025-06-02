@@ -712,7 +712,8 @@ VALID_GROUPS = ['NguoiNhap', 'ThuNgan', 'QuanLi']
 
 class UserSerializer(serializers.ModelSerializer):
     gioiTinh = serializers.CharField(source='profile.gioiTinh', required=False)
-    role = serializers.SerializerMethodField()
+    role = serializers.ChoiceField(choices=VALID_GROUPS, required=False)  
+
 
     class Meta:
         model = User
@@ -720,7 +721,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_role(self, obj):
         return obj.groups.first().name if obj.groups.exists() else None
-
+    
+    def to_representation(self, instance):
+        # This ensures we still return the role name in responses
+        ret = super().to_representation(instance)
+        ret['role'] = self.get_role(instance)
+        return ret
+    
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', {})
         role = validated_data.pop('role', None)
@@ -730,11 +737,16 @@ class UserSerializer(serializers.ModelSerializer):
             instance.profile.save()
             
         if role:
-            # Remove from current groups
-            instance.groups.clear()
-            # Add to new group
-            group = Group.objects.get(name=role)
-            instance.groups.add(group)
+            try:
+                # Remove from current groups
+                instance.groups.clear()
+                # Add to new group
+                group = Group.objects.get(name=role)
+                instance.groups.add(group)
+            except Group.DoesNotExist:
+                raise serializers.ValidationError({
+                    'role': f"Nhóm người dùng '{role}' không tồn tại trong hệ thống. Vui lòng chọn một trong các nhóm: {', '.join(VALID_GROUPS)}"
+                })
             
         return super().update(instance, validated_data)
 
