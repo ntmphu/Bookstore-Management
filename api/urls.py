@@ -1,7 +1,7 @@
 from rest_framework import routers
 from .views import (
     KhachHangViewSet, SachViewSet, HoaDonViewSet, CTHoaDonViewSet, PhieuThuTienViewSet,
-    DauSachViewSet, TacGiaViewSet, TheLoaiViewSet,
+    DauSachViewSet, TacGiaViewSet, TheLoaiViewSet, NXBViewSet,
     PhieuNhapSachViewSet, CTNhapSachViewSet,
     BaoCaoTonViewSet, CTBCTonViewSet, BaoCaoCongNoViewSet, CTBCCongNoViewSet, ThamSoViewSet,
     UserManagementViewSet, 
@@ -23,6 +23,7 @@ router.register(r'ctbcton', CTBCTonViewSet)
 router.register(r'baocaocongno', BaoCaoCongNoViewSet)
 router.register(r'ctbccongno', CTBCCongNoViewSet)
 router.register(r'thamso', ThamSoViewSet)
+router.register(r'nxb', NXBViewSet)
 router.register(r'user', UserManagementViewSet, basename='user')
 
 urlpatterns = router.urls

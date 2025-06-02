@@ -113,7 +113,7 @@ class SachSerializer(serializers.ModelSerializer):
     TenDauSach_input = serializers.CharField(write_only=True, required=True)
     TenDauSach = serializers.SerializerMethodField()
     TenNXB_input = serializers.CharField(write_only=True, required=True)
-    TenNXB = serializers.SerializerMethodField(source='nxb.TenNXB', read_only=True)
+    TenNXB = serializers.SerializerMethodField()
     MaDauSach = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -125,10 +125,13 @@ class SachSerializer(serializers.ModelSerializer):
         return f"S{obj.MaSach:03d}"
 
     def get_MaDauSach(self, obj):
-        return f"DS{obj.MaDauSach:03d}"
+        return f"DS{obj.MaDauSach.MaDauSach:03d}"
 
     def get_TenDauSach(self, obj):
         return obj.MaDauSach.TenSach
+
+    def get_TenNXB(self, obj):
+        return obj.NXB.TenNXB
 
     def create(self, validated_data):
         ten_dausach = validated_data.pop('TenDauSach_input', None)
@@ -645,28 +648,59 @@ class ThamSoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate_SLNhapTT(self, value):
-        if not isinstance(int(value), int) or value <= 0 :
+        try:
+            int(value)
+        except (ValueError, TypeError):
             raise serializers.ValidationError("Số lượng nhập tối thiểu phải là số nguyên dương.")
+        
+        if value <= 0:
+            raise serializers.ValidationError("Số lượng nhập tối thiểu phải là số nguyên dương.")
+        
         return value
+
     
     def validate_TonTD(self, value):
-        if not isinstance(int(value), int) or value <= 0:
+        try:
+            int(value)
+        except (ValueError, TypeError):
             raise serializers.ValidationError("Tồn tối đa phải là số nguyên dương.")
+        
+        if value <= 0:
+            raise serializers.ValidationError("Tồn tối đa phải là số nguyên dương.")
+        
         return value
 
     def validate_NoTD(self, value):
-        if not isinstance(int(value), int) or value <= 0:
+        try:
+            int(value)
+        except (ValueError, TypeError):
             raise serializers.ValidationError("Nợ tối đa phải là số nguyên dương.")
+        
+        if value <= 0:
+            raise serializers.ValidationError("Nợ tối đa phải là số nguyên dương.")
+        
         return value
     
     def validate_TonTT(self, value):
-        if not isinstance(int(value), int) or value <= 0:
+        try:
+            int(value)
+        except (ValueError, TypeError):
             raise serializers.ValidationError("Tồn tối thiểu phải là số nguyên dương.")
+        
+        if value <= 0:
+            raise serializers.ValidationError("Tồn tối thiểu phải là số nguyên dương.")
+        
         return value
     
     def validate_TiLe(self, value):
-        if not isinstance(float(value), float) or value <= 0:
+        try:
+            float(value)
+        except (ValueError, TypeError):
             raise serializers.ValidationError("Tỉ lệ phải là số thực duơng.")
+        
+        if value <= 0:
+            raise serializers.ValidationError("Tỉ lệ phải là số thực duơng.")
+        
         return value
     
     def validate_SDQD4(self, value):

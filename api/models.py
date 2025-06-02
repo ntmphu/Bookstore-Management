@@ -51,7 +51,7 @@ class DauSach(models.Model):
     MaDauSach = models.AutoField(primary_key=True)
     TenSach = models.CharField(max_length=200, unique=True)
     MaTheLoai = models.ForeignKey(TheLoai, blank=True, null=True, on_delete=models.SET_NULL, related_name='DauSach')
-    MaTG = models.ManyToManyField(TacGia, blank=True, related_name='DauSach')
+    MaTG = models.ManyToManyField(TacGia, related_name='DauSach')
 
     def __str__(self):
         return self.TenSach

@@ -5,14 +5,14 @@ from django.db import IntegrityError
 
 from .models import (
     KhachHang, Sach, HoaDon, CT_HoaDon, PhieuThuTien,
-    DauSach, TacGia, TheLoai, 
+    DauSach, TacGia, TheLoai, NXB,
     PhieuNhapSach, CT_NhapSach,
     BaoCaoTon, CT_BCTon, BaoCaoCongNo, CT_BCCongNo, ThamSo
 )
 
 from .serializers import (
     KhachHangSerializer, SachSerializer, HoaDonSerializer, CTHoaDonSerializer, PhieuThuTienSerializer,
-    DauSachSerializer, TacGiaSerializer, TheLoaiSerializer, 
+    DauSachSerializer, TacGiaSerializer, TheLoaiSerializer, NXBSerializer,
     PhieuNhapSachSerializer, CTNhapSachSerializer,
     BaoCaoTonSerializer, CT_BCTonSerializer, BaoCaoCongNoSerializer, CT_BCCNSerializer, ThamSoSerializer,
     
@@ -127,6 +127,11 @@ class TacGiaViewSet(viewsets.ModelViewSet):
     serializer_class = TacGiaSerializer
     permission_classes = [IsAuthenticated]
 
+class NXBViewSet(viewsets.ModelViewSet):
+    queryset = NXB.objects.all()
+    serializer_class = NXBSerializer
+    permission_classes = [IsAuthenticated]
+
 # TheLoai: Nguoi nhap (full), Quanli (all)
 class TheLoaiViewSet(viewsets.ModelViewSet):
     queryset = TheLoai.objects.all()
@@ -164,7 +169,7 @@ class SachFilter(FilterSet):
     # Filter by genre name (TheLoai.TenTheLoai)
     the_loai = CharFilter(field_name='MaDauSach__MaTheLoai__TenTheLoai', lookup_expr='icontains')
     # Filter by publisher (Sach.NXB)
-    nxb = CharFilter(field_name='NXB', lookup_expr='icontains')
+    nxb = CharFilter(field_name='NXB__TenNXB', lookup_expr='icontains')
     # Filter by year (Sach.NamXB)
     nam_xb = NumberFilter(field_name='NamXB')
     nam_xb_min = NumberFilter(field_name='NamXB', lookup_expr='gte')
