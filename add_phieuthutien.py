@@ -9,39 +9,36 @@ django.setup()
 
 from api.serializers import PhieuThuTienSerializer
 
-# phieuthutien_data = [
-#   { "NguoiThu_input": "NV001", "NgayThu": "12/03/2025", "MaKH_input": "KH001", "SoTienThu": 10000 },
-#   { "NguoiThu_input": "NV001", "NgayThu": "15/03/2025", "MaKH_input": "KH001", "SoTienThu": 8000 },
-
-#   { "NguoiThu_input": "NV001", "NgayThu": "11/03/2025", "MaKH_input": "KH002", "SoTienThu": 9000 },
-#   { "NguoiThu_input": "NV001", "NgayThu": "18/03/2025", "MaKH_input": "KH002", "SoTienThu": 6000 },
-#   { "NguoiThu_input": "NV001", "NgayThu": "25/03/2025", "MaKH_input": "KH002", "SoTienThu": 7000 },
-
-#   { "NguoiThu_input": "NV001", "NgayThu": "10/03/2025", "MaKH_input": "KH003", "SoTienThu": 9500 },
-#   { "NguoiThu_input": "NV001", "NgayThu": "22/03/2025", "MaKH_input": "KH003", "SoTienThu": 10500 },
-
-#   { "NguoiThu_input": "NV001", "NgayThu": "14/03/2025", "MaKH_input": "KH004", "SoTienThu": 5000 },
-
-#   { "NguoiThu_input": "NV001", "NgayThu": "13/03/2025", "MaKH_input": "KH005", "SoTienThu": 12000 },
-#   { "NguoiThu_input": "NV001", "NgayThu": "19/03/2025", "MaKH_input": "KH005", "SoTienThu": 6000 },
-
-#   { "NguoiThu_input": "NV001", "NgayThu": "17/03/2025", "MaKH_input": "KH006", "SoTienThu": 7000 },
-
-#   { "NguoiThu_input": "NV001", "NgayThu": "16/03/2025", "MaKH_input": "KH007", "SoTienThu": 11000 },
-#   { "NguoiThu_input": "NV001", "NgayThu": "24/03/2025", "MaKH_input": "KH007", "SoTienThu": 9000 },
-
-#   { "NguoiThu_input": "NV001", "NgayThu": "12/03/2025", "MaKH_input": "KH008", "SoTienThu": 7500 },
-
-#   { "NguoiThu_input": "NV001", "NgayThu": "13/03/2025", "MaKH_input": "KH009", "SoTienThu": 8000 },
-#   { "NguoiThu_input": "NV001", "NgayThu": "20/03/2025", "MaKH_input": "KH009", "SoTienThu": 7000 },
-
-#   { "NguoiThu_input": "NV001", "NgayThu": "14/03/2025", "MaKH_input": "KH010", "SoTienThu": 6500 },
-#   { "NguoiThu_input": "NV001", "NgayThu": "21/03/2025", "MaKH_input": "KH010", "SoTienThu": 8500 },
-
-#   { "NguoiThu_input": "NV001", "NgayThu": "23/03/2025", "MaKH_input": "KH004", "SoTienThu": 4000 }
-# ]
-
 phieuthutien_data = [
+  { "NguoiThu_input": "NV001", "NgayThu": "12/03/2025", "MaKH_input": "KH001", "SoTienThu": 10000 },
+  { "NguoiThu_input": "NV001", "NgayThu": "15/03/2025", "MaKH_input": "KH001", "SoTienThu": 8000 },
+
+  { "NguoiThu_input": "NV001", "NgayThu": "11/03/2025", "MaKH_input": "KH002", "SoTienThu": 9000 },
+  { "NguoiThu_input": "NV001", "NgayThu": "18/03/2025", "MaKH_input": "KH002", "SoTienThu": 6000 },
+  { "NguoiThu_input": "NV001", "NgayThu": "25/03/2025", "MaKH_input": "KH002", "SoTienThu": 7000 },
+
+  { "NguoiThu_input": "NV001", "NgayThu": "10/03/2025", "MaKH_input": "KH003", "SoTienThu": 9500 },
+  { "NguoiThu_input": "NV001", "NgayThu": "22/03/2025", "MaKH_input": "KH003", "SoTienThu": 10500 },
+
+  { "NguoiThu_input": "NV001", "NgayThu": "14/03/2025", "MaKH_input": "KH004", "SoTienThu": 5000 },
+
+  { "NguoiThu_input": "NV001", "NgayThu": "13/03/2025", "MaKH_input": "KH005", "SoTienThu": 12000 },
+  { "NguoiThu_input": "NV001", "NgayThu": "19/03/2025", "MaKH_input": "KH005", "SoTienThu": 6000 },
+
+  { "NguoiThu_input": "NV001", "NgayThu": "17/03/2025", "MaKH_input": "KH006", "SoTienThu": 7000 },
+
+  { "NguoiThu_input": "NV001", "NgayThu": "16/03/2025", "MaKH_input": "KH007", "SoTienThu": 11000 },
+  { "NguoiThu_input": "NV001", "NgayThu": "24/03/2025", "MaKH_input": "KH007", "SoTienThu": 9000 },
+
+  { "NguoiThu_input": "NV001", "NgayThu": "12/03/2025", "MaKH_input": "KH008", "SoTienThu": 7500 },
+
+  { "NguoiThu_input": "NV001", "NgayThu": "13/03/2025", "MaKH_input": "KH009", "SoTienThu": 8000 },
+  { "NguoiThu_input": "NV001", "NgayThu": "20/03/2025", "MaKH_input": "KH009", "SoTienThu": 7000 },
+
+  { "NguoiThu_input": "NV001", "NgayThu": "14/03/2025", "MaKH_input": "KH010", "SoTienThu": 6500 },
+  { "NguoiThu_input": "NV001", "NgayThu": "21/03/2025", "MaKH_input": "KH010", "SoTienThu": 8500 },
+
+  { "NguoiThu_input": "NV001", "NgayThu": "23/03/2025", "MaKH_input": "KH004", "SoTienThu": 4000 },
   { "NguoiThu_input": "NV001", "NgayThu": "01/04/2025", "MaKH_input": "KH001", "SoTienThu": 75000 },
   { "NguoiThu_input": "NV001", "NgayThu": "05/04/2025", "MaKH_input": "KH001", "SoTienThu": 132000 },
   { "NguoiThu_input": "NV001", "NgayThu": "09/04/2025", "MaKH_input": "KH001", "SoTienThu": 98000 },

@@ -22,6 +22,7 @@ def generate_baocaoton_for_month(target_month: date = None):
     for sach in Sach.objects.all():
         # TonDau = TonCuoi of prev month or current stock if no prev month report
         prev_ct = CT_BCTon.objects.filter(MaBCTon__Thang=prev_month, MaSach=sach).first()
+        print(sach.MaSach)
         ton_dau = prev_ct.TonCuoi if prev_ct else sach.SLTon
 
         # PhatSinh = total imported this month
@@ -37,9 +38,9 @@ def generate_baocaoton_for_month(target_month: date = None):
             MaHD__NgayLap__month=target_month.month,
             MaSach=sach
         ).aggregate(total=Sum('SLBan'))['total'] or 0
-
+        print(ton_dau, phat_sinh, so_luong_ban)
         ton_cuoi = ton_dau + phat_sinh - so_luong_ban
-
+        
         # Create or update CT_BCTon for sach
         ct_bcton, _ = CT_BCTon.objects.update_or_create(
             MaBCTon=baocao,
