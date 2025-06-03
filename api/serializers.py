@@ -404,14 +404,6 @@ class CTHoaDonSerializer(serializers.ModelSerializer):
         data['MaSach'] = sach
         data['GiaBan'] = giaban
         data['ThanhTien'] = giaban * slban
-
-        khachhang = hoadon.MaKH
-        new_sotienno = khachhang.SoTienNo + data['ThanhTien']
-        if new_sotienno > thamso.NoTD:
-            raise serializers.ValidationError({
-                'MaHD_input, MaSach_input, SLBan': f"Khách hàng KH{khachhang.MaKhachHang:03d}: {khachhang.HoTen} nợ quá số tiền nợ tối đa ({thamso.NoTD}). Nợ hiện tại: {khachhang.SoTienNo}, nợ mới: {new_sotienno}."
-            })
-
         return data
 
     def create(self, validated_data):
@@ -509,6 +501,15 @@ class HoaDonSerializer(serializers.ModelSerializer):
         # These fields were added during validation
         validated_data.pop('MaKH_input', None)
         validated_data.pop('NguoiLapHD_input', None)
+
+        thamso = ThamSo.objects.first()
+        khachhang = validated_data.get('MaKH')
+        sotienno = khachhang.SoTienNo
+        
+        if sotienno > thamso.NoTD:
+            raise serializers.ValidationError({
+                'MaKH_input': f"Khách hàng KH{khachhang.MaKhachHang:03d}: {khachhang.HoTen} nợ quá số tiền nợ tối đa ({thamso.NoTD}). Nợ hiện tại: {khachhang.SoTienNo}."
+            })
 
         return HoaDon.objects.create(**validated_data)
     

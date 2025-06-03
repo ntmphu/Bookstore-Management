@@ -15,7 +15,6 @@ def generate_baocaoton_for_month(target_month: date = None):
 
     # Get previous month for TonDau lookup
     prev_month = prev_month_date(target_month)
-
     # Create or get BaoCaoTon for the month
     baocao, created = BaoCaoTon.objects.get_or_create(Thang=target_month)
 

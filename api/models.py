@@ -229,23 +229,21 @@ class HoaDon(models.Model):
         return f"Hóa đơn #{self.MaHD} - {self.MaKH.HoTen}"
     
     def save(self, *args, **kwargs):
-        self.TongTien = sum(ct.ThanhTien for ct in self.ct_hoadon.all())
-        self.ConLai = self.TongTien - self.SoTienTra
-
-        # Update customer's debt
-        if self.pk:
-            # Update case
+        if not self.pk:
+            super().save(*args, **kwargs)
+        
+        else:
+            self.TongTien = sum(ct.ThanhTien for ct in self.ct_hoadon.all())
+            self.ConLai = self.TongTien - self.SoTienTra
             old = HoaDon.objects.get(pk=self.pk)
             diff = self.ConLai - old.ConLai
-        else:
-            diff = self.ConLai
-        self.MaKH.SoTienNo += diff
+            self.MaKH.SoTienNo += diff
 
-        if self.MaKH.SoTienNo < 0:
-            raise ValueError("Số tiền nợ không thể âm.")
+            if self.MaKH.SoTienNo < 0:
+                raise ValueError("Số tiền nợ không thể âm.")
         
-        super().save(*args, **kwargs)
-        self.MaKH.save()
+            super().save(*args, **kwargs)
+            self.MaKH.save()
     
 class CT_HoaDon(models.Model):
     MaHD = models.ForeignKey(HoaDon, on_delete=models.CASCADE, related_name='ct_hoadon')
