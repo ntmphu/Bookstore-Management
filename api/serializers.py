@@ -708,12 +708,21 @@ class ThamSoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Sử dụng quy định 4 phải là '0' hoặc '1'.")
         return value
     
-VALID_GROUPS = ['NguoiNhap', 'ThuNgan', 'QuanLi']
+
+
+
+def get_valid_groups():
+    """Get all group names from the database"""
+    return list(Group.objects.values_list('name', flat=True))
 
 class UserSerializer(serializers.ModelSerializer):
     gioiTinh = serializers.CharField(source='profile.gioiTinh', required=False)
-    role = serializers.ChoiceField(choices=VALID_GROUPS, required=False)  
+    role = serializers.ChoiceField(choices=[], required=False)  # Empty choices initially
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Update choices dynamically
+        self.fields['role'].choices = [(group, group) for group in get_valid_groups()]
 
     class Meta:
         model = User
@@ -752,7 +761,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CreateUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField()
-    role = serializers.ChoiceField(choices=[r for r in VALID_GROUPS], write_only=True)
+    role = serializers.ChoiceField(choices=[], required=False)  # Empty choices initially
 
     class Meta:
         model = User

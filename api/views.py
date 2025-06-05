@@ -24,7 +24,11 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import UserSerializer, CreateUserSerializer
-VALID_GROUPS = ['NguoiNhap', 'ThuNgan', 'QuanLi']
+
+
+def get_valid_groups():
+    """Get all group names from the database"""
+    return list(Group.objects.values_list('name', flat=True))
 # class IsAuthenticated(permissions.BasePermission):
 #     def has_permission(self, request, view):
 #         if not request.user or not request.user.is_authenticated:
@@ -66,7 +70,7 @@ class UserManagementViewSet(viewsets.ModelViewSet):
                 user.profile.save()
             # Set group
             group_name = request.data.get('role')
-            if group_name in VALID_GROUPS:
+            if group_name in get_valid_groups():
                 group = Group.objects.get(name=group_name)
                 user.groups.add(group)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
