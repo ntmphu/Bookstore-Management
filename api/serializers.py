@@ -761,17 +761,26 @@ class UserSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField()
-    role = serializers.ChoiceField(choices=[], required=False)  # Empty choices initially
+    password = serializers.CharField(write_only=True)
+    role = serializers.ChoiceField(choices=[], write_only=True, required=True)
+    group = serializers.SerializerMethodField(read_only=True)  # Add this for reading group
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['role'].choices = [(group, group) for group in get_valid_groups()]
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'email', 'first_name', 'last_name', 'role']
+        fields = ['username', 'password', 'email', 'first_name', 'last_name', 'role', 'group']
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("Username already exists")
         return value
+
+    def get_group(self, obj):
+        """Return the user's group name"""
+        return obj.groups.first().name if obj.groups.exists() else None
 
     def create(self, validated_data):
         role = validated_data.pop('role')
@@ -779,7 +788,20 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         user.set_password(password)
         # Add user to the role group
-        group = Group.objects.get(name=role)
-        user.groups.add(group)
-        user.save()
+        try:
+            group = Group.objects.get(name=role)
+            user.groups.add(group)
+            user.save()
+        except Group.DoesNotExist:
+            user.delete()  # Cleanup if group assignment fails
+            raise serializers.ValidationError({
+                'role': f"Group '{role}' does not exist. Valid groups are: {', '.join(get_valid_groups())}"
+            })
         return user
+
+    def to_representation(self, instance):
+        """Custom representation that includes the group name"""
+        ret = super().to_representation(instance)
+        ret['role'] = self.get_group(instance)  # Replace 'group' with 'role' in output
+        ret.pop('group', None)  # Remove the temporary 'group' field
+        return ret

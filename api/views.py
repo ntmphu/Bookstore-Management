@@ -63,16 +63,11 @@ class UserManagementViewSet(viewsets.ModelViewSet):
     def create_staff(self, request):
         serializer = CreateUserSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            user = serializer.save()  # This will handle role assignment
             # Set gender if provided
             if 'gioiTinh' in request.data:
                 user.profile.gioiTinh = request.data['gioiTinh']
                 user.profile.save()
-            # Set group
-            group_name = request.data.get('role')
-            if group_name in get_valid_groups():
-                group = Group.objects.get(name=group_name)
-                user.groups.add(group)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
