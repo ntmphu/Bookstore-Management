@@ -99,6 +99,12 @@ class UserManagementViewSet(viewsets.ModelViewSet):
         user.is_active = False
         user.save()
         return Response({"status": "user deactivated"})
+    @action(detail=True, methods=['post'])
+    def reactivate(self, request, pk=None):
+        user = self.get_object()
+        user.is_active = True
+        user.save()
+        return Response({"status": "user reactivated"})
 
 # CT_HoaDon: Nguoilaphd (full), Quanli (all)
 class CTHoaDonViewSet(viewsets.ModelViewSet):

@@ -719,7 +719,8 @@ def get_valid_groups():
 class UserSerializer(serializers.ModelSerializer):
     gioiTinh = serializers.CharField(source='profile.gioiTinh', required=False)
     role = serializers.ChoiceField(choices=[], required=False)  # Empty choices initially
-
+    is_active = serializers.BooleanField(read_only=True)  # Add this field
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Update choices dynamically
@@ -727,7 +728,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'gioiTinh', 'role']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'gioiTinh', 'role', 'is_active']
 
     def get_role(self, obj):
         return obj.groups.first().name if obj.groups.exists() else None
@@ -764,7 +765,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     role = serializers.ChoiceField(choices=[], write_only=True, required=True)
     group = serializers.SerializerMethodField(read_only=True)  # Add this for reading group
-
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['role'].choices = [(group, group) for group in get_valid_groups()]
@@ -787,6 +788,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         user = User.objects.create_user(**validated_data)
         user.set_password(password)
+        user.is_active = True
         # Add user to the role group
         try:
             group = Group.objects.get(name=role)
