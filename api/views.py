@@ -24,7 +24,11 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import UserSerializer, CreateUserSerializer
-VALID_GROUPS = ['NguoiNhap', 'ThuNgan', 'QuanLi']
+
+
+def get_valid_groups():
+    """Get all group names from the database"""
+    return list(Group.objects.values_list('name', flat=True))
 # class IsAuthenticated(permissions.BasePermission):
 #     def has_permission(self, request, view):
 #         if not request.user or not request.user.is_authenticated:
@@ -59,16 +63,11 @@ class UserManagementViewSet(viewsets.ModelViewSet):
     def create_staff(self, request):
         serializer = CreateUserSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            user = serializer.save()  # This will handle role assignment
             # Set gender if provided
             if 'gioiTinh' in request.data:
                 user.profile.gioiTinh = request.data['gioiTinh']
                 user.profile.save()
-            # Set group
-            group_name = request.data.get('role')
-            if group_name in VALID_GROUPS:
-                group = Group.objects.get(name=group_name)
-                user.groups.add(group)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -100,6 +99,12 @@ class UserManagementViewSet(viewsets.ModelViewSet):
         user.is_active = False
         user.save()
         return Response({"status": "user deactivated"})
+    @action(detail=True, methods=['post'])
+    def reactivate(self, request, pk=None):
+        user = self.get_object()
+        user.is_active = True
+        user.save()
+        return Response({"status": "user reactivated"})
 
 # CT_HoaDon: Nguoilaphd (full), Quanli (all)
 class CTHoaDonViewSet(viewsets.ModelViewSet):
