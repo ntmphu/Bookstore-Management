@@ -360,13 +360,13 @@ class CTHoaDonSerializer(serializers.ModelSerializer):
             ma_hd = int(ma_hd_input.replace('HD', ''))
             hoadon = HoaDon.objects.get(MaHD=ma_hd)
         except (ValueError, HoaDon.DoesNotExist):
-            raise serializers.ValidationError({"MaHD_input": "Mã hóa đơn {ma_hd} không tồn tại."})
+            raise serializers.ValidationError({"MaHD_input": f"Mã hóa đơn HD{ma_hd:03d} không tồn tại."})
 
         try:
             ma_sach = int(ma_sach_input.replace('S', ''))
             sach = Sach.objects.get(MaSach=ma_sach)
         except (ValueError, Sach.DoesNotExist):
-            raise serializers.ValidationError({"MaSach_input": "Mã sách {ma_sach} không tồn tại."})
+            raise serializers.ValidationError({"MaSach_input": f"Mã sách S{ma_sach:03d} không tồn tại."})
 
         thamso = ThamSo.objects.first()
         if not thamso:
@@ -589,10 +589,13 @@ class CT_BCTonSerializer(serializers.ModelSerializer):
     TenSach = serializers.CharField(source='MaSach.MaDauSach.TenSach', read_only=True)
     MaSach = serializers.SerializerMethodField()
     id = serializers.SerializerMethodField()
+    MaBCTon = serializers.SerializerMethodField()
+    Thang = serializers.SerializerMethodField()
+    Nam = serializers.SerializerMethodField()
 
     class Meta:
         model = CT_BCTon
-        fields = ['id', 'MaSach', 'TenSach', 'TonDau', 'PhatSinh', 'TonCuoi']
+        fields = ['id', 'MaBCTon', 'Thang', 'Nam', 'MaSach', 'TenSach', 'TonDau', 'PhatSinh', 'TonCuoi']
         read_only_fields = fields  # All fields are read-only
 
     def get_id(self, obj):
@@ -600,7 +603,16 @@ class CT_BCTonSerializer(serializers.ModelSerializer):
 
     def get_MaSach(self, obj):
         return f"S{obj.MaSach.MaSach:03d}"
+    
+    def get_MaBCTon(self, obj):
+        return f"BCT{obj.MaBCTon.MaBCTon:03d}"
 
+    def get_Thang(self, obj):
+        return f"{obj.MaBCTon.Thang.month}"
+    
+    def get_Nam(self, obj):
+        return f"{obj.MaBCTon.Thang.year}"
+    
 class BaoCaoTonSerializer(serializers.ModelSerializer):
     Thang = serializers.DateField(format="%m/%Y")
     chi_tiet_ton = CT_BCTonSerializer(many=True, read_only=True)
@@ -618,10 +630,13 @@ class CT_BCCNSerializer(serializers.ModelSerializer):
     TenKH = serializers.CharField(source='MaKH.HoTen', read_only=True)
     MaKH = serializers.SerializerMethodField()
     id = serializers.SerializerMethodField()
+    MaBCCN = serializers.SerializerMethodField()
+    Thang = serializers.SerializerMethodField()
+    Nam = serializers.SerializerMethodField()
 
     class Meta:
         model = CT_BCCongNo
-        fields = ['id', 'MaKH', 'TenKH', 'NoDau', 'PhatSinh', 'NoCuoi']
+        fields = ['id', 'MaBCCN', 'Thang', 'Nam', 'MaKH', 'TenKH', 'NoDau', 'PhatSinh', 'NoCuoi']
         read_only_fields = fields
 
     def get_MaKH(self, obj):
@@ -629,6 +644,15 @@ class CT_BCCNSerializer(serializers.ModelSerializer):
     
     def get_id(self, obj):
         return f"CTBCN{obj.id:03d}"
+    
+    def get_MaBCCN(self, obj):
+        return f"BCCN{obj.MaBCCN.MaBCCN:03d}"
+    
+    def get_Thang(self, obj):
+        return f"{obj.MaBCCN.Thang.month}"
+    
+    def get_Nam(self, obj):
+        return f"{obj.MaBCCN.Thang.year}"
 
 class BaoCaoCongNoSerializer(serializers.ModelSerializer):
     Thang = serializers.DateField(format="%m/%Y")
