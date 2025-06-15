@@ -279,25 +279,39 @@ class CTNhapSachSerializer(serializers.ModelSerializer):
                 'MaSach_input': f"Không tồn tại mã sách '{ma_sach_input}'. Vui lòng nhập đúng mã sách."
             })
 
-        # Rule 1: SLNhap >= SLNhapTT
         if sl_nhap < thamso.SLNhapTT:
             raise serializers.ValidationError({
                 "SLNhap": f"Số lượng nhập phải ≥ {thamso.SLNhapTT}."
             })
 
-        # Rule 2: SLTon must not exceed TonTD
-        # Get current SLTon
         current_slton = sach.SLTon
-        if current_slton > thamso.TonTD:
-            raise serializers.ValidationError({
-                "MaSach_input, SLNhap": f"Tồn của sách {sach.MaSach}: {sach.MaDauSach.TenSach}, vượt quá tồn tối đa ({thamso.TonTD})."
-            })
-        
+        # update case
+        if self.instance:
+            old_sln = self.SLNhap
+            diff = sl_nhap - old_sln
+            if diff > 0:
+                if current_slton > thamso.TonTD:
+                    raise serializers.ValidationError({
+                        "MaSach_input, SLNhap": f"Tồn của sách {sach.MaSach}: {sach.MaDauSach.TenSach}, vượt quá tồn tối đa ({thamso.TonTD})."
+                    })
+            else: 
+                new_slton = current_slton + diff
+                if new_slton < 0:
+                    raise serializers.ValidationError({
+                        "MaSach_input, SLNhap": f"Tồn của sách {sach.MaSach}: {sach.MaDauSach.TenSach} phải là số dương."
+                    })
+        # create case
+        else:
+            current_slton = sach.SLTon
+            if current_slton > thamso.TonTD:
+                raise serializers.ValidationError({
+                    "MaSach_input, SLNhap": f"Tồn của sách {sach.MaSach}: {sach.MaDauSach.TenSach}, vượt quá tồn tối đa ({thamso.TonTD})."
+                })
+
         # Temporarily attach sach for use in create()
         data['MaPhieuNhap'] = phieunhapsach
         data['MaSach'] = sach
         return data
-
 
     def get_MaCT_NhapSach(self, obj):
         return f"CTNS{obj.id:03d}"
@@ -314,6 +328,12 @@ class CTNhapSachSerializer(serializers.ModelSerializer):
         validated_data.pop('MaSach_input', None)
 
         return CT_NhapSach.objects.create(**validated_data)
+    
+    def update(self, instance, validated_data):
+        instance.email = validated_data.get('email', instance.email)
+        instance.content = validated_data.get('content', instance.content)
+        instance.created = validated_data.get('created', instance.created)
+        return instance
 
 class CTHoaDonSerializer(serializers.ModelSerializer):
     MaHD_input = serializers.CharField(write_only=True, required=True)
@@ -379,9 +399,11 @@ class CTHoaDonSerializer(serializers.ModelSerializer):
 
         slban = data.get('SLBan')
 
+        # update case
         if self.instance:
             old_slban = self.instance.SLBan
             diff = slban - old_slban
+        # create case
         else:
             diff = slban
 
@@ -390,6 +412,11 @@ class CTHoaDonSerializer(serializers.ModelSerializer):
         if new_slton < thamso.TonTT:
             raise serializers.ValidationError({
                 "MaSach_input, SLBan": f"Số lượng tồn sau khi bán ({new_slton}) nhỏ hơn số lượng tồn tối thiểu ({thamso.TonTT})."
+            })
+        
+        if new_slton < 0:
+            raise serializers.ValidationError({
+                "MaSach_input, SLBan": f"Số lượng sách không đủ để bán (số lượng hiện tại: {sach.SLTon})."
             })
 
         gianhap = (
@@ -411,24 +438,24 @@ class CTHoaDonSerializer(serializers.ModelSerializer):
         validated_data.pop('MaSach_input', None)
         return CT_HoaDon.objects.create(**validated_data)
     
-    def update(self, instance, validated_data):
-        # Update fields
-        instance.SLBan = validated_data.get('SLBan', instance.SLBan)
-        thamso = ThamSo.objects.first()
+    # def update(self, instance, validated_data):
+    #     # Update fields
+    #     instance.SLBan = validated_data.get('SLBan', instance.SLBan)
+    #     thamso = ThamSo.objects.first()
         
-        gianhap = (
-            CT_NhapSach.objects
-            .filter(MaSach=instance.MaSach)
-            .order_by('-MaPhieuNhap__NgayNhap')
-            .first()
-        )
+    #     gianhap = (
+    #         CT_NhapSach.objects
+    #         .filter(MaSach=instance.MaSach)
+    #         .order_by('-MaPhieuNhap__NgayNhap')
+    #         .first()
+    #     )
 
-        instance.GiaBan = gianhap.GiaNhap * thamso.TiLe
-        instance.ThanhTien = instance.GiaBan * instance.SLBan
-        instance.save()
+    #     instance.GiaBan = gianhap.GiaNhap * thamso.TiLe
+    #     instance.ThanhTien = instance.GiaBan * instance.SLBan
+    #     instance.save()
 
-        # Cập nhật hóa đơn
-        return instance
+    #     # Cập nhật hóa đơn
+    #     return instance
     
 class HoaDonSerializer(serializers.ModelSerializer):
     NgayLap = serializers.DateField(format="%d/%m/%Y", input_formats=["%d/%m/%Y"], required=True)
@@ -460,14 +487,19 @@ class HoaDonSerializer(serializers.ModelSerializer):
     def validate_SoTienTra(self, value):
         if value < 0:
             raise serializers.ValidationError("Số tiền trả không được âm.")
+        if value > self.TongTien:
+            raise serializers.ValidationError({
+                'SoTienTra': f"Số tiền trả ({value}) không được vượt quá tổng tiền ({self.TongTien})."
+            })
         return value
     
-    def update(self, instance, validated_data):
-        sotientra = validated_data.get("SoTienTra", instance.SoTienTra)
-        instance.SoTienTra = sotientra
-        instance.ConLai = instance.TongTien - instance.SoTienTra
-        instance.save()
-        return instance
+    # def update(self, instance, validated_data):
+        # sotientra = validated_data.get("SoTienTra", instance.SoTienTra)
+    #     instance.SoTienTra = sotientra
+    #     # instance.ConLai = instance.TongTien - instance.SoTienTra
+    #     instance.save()
+
+    #     return instance
     
     def validate(self, data):
         ma_kh_input = data.get('MaKH_input')
@@ -569,11 +601,21 @@ class PhieuThuTienSerializer(serializers.ModelSerializer):
             })
 
         # Validate SoTienThu
-        if sotienthu > khachhang.SoTienNo:
-            raise serializers.ValidationError({
-                'SoTienThu': f"Số tiền thu ({sotienthu}) không được vượt quá số tiền nợ của khách hàng ({khachhang.SoTienNo})."
-            })
-        
+        # create case
+        if not self.instance:
+            if sotienthu > khachhang.SoTienNo:
+                raise serializers.ValidationError({
+                    'SoTienThu': f"Số tiền thu ({sotienthu}) không được vượt quá số tiền nợ của khách hàng ({khachhang.SoTienNo})."
+                })
+        # update case:
+        else:
+            diff = sotienthu - self.SoTienThu
+            new_no = khachhang.SoTienNo - diff
+            if new_no < 0:
+                raise serializers.ValidationError({
+                    'SoTienThu': f"Số tiền thu ({sotienthu}) không được vượt quá số tiền nợ của khách hàng ({khachhang.SoTienNo})."
+                })
+
         data['NguoiThu'] = user
         data['MaKH'] = khachhang
         return data
@@ -626,6 +668,13 @@ class BaoCaoTonSerializer(serializers.ModelSerializer):
     def get_MaBCTon(self, obj):
         return f"BCT{obj.MaBCTon:03d}"
     
+    def validate(self, data):
+        first_date = PhieuNhapSach.objects.order_by('NgayNhap').values_list('NgayNhap', flat=True).first()
+        if not first_date:
+            raise serializers.ValidationError({
+                'Error': f"Không có dữ liệu nhập sách trong cơ sở dữ liệu."
+            })
+    
 class CT_BCCNSerializer(serializers.ModelSerializer):
     TenKH = serializers.CharField(source='MaKH.HoTen', read_only=True)
     MaKH = serializers.SerializerMethodField()
@@ -666,6 +715,13 @@ class BaoCaoCongNoSerializer(serializers.ModelSerializer):
 
     def get_MaBCCN(self, obj):
         return f"BCCN{obj.MaBCCN:03d}"
+    
+    def validate(self, data):
+        first_date = HoaDon.objects.order_by('NgayLap').values_list('NgayLap', flat=True).first()
+        if not first_date:
+            raise serializers.ValidationError({
+                'Error': f"Không có dữ liệu mua sách trong cơ sở dữ liệu."
+            })
     
 class ThamSoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -733,9 +789,6 @@ class ThamSoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Sử dụng quy định 4 phải là '0' hoặc '1'.")
         return value
     
-
-
-
 def get_valid_groups():
     """Get all group names from the database"""
     return list(Group.objects.values_list('name', flat=True))

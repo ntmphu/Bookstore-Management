@@ -8,7 +8,10 @@ from django.conf import settings
 # Add this after the imports
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
+from django.db import transaction
+from django.utils.timezone import make_aware
+from datetime import date, timedelta
+from django.db.models import Sum
 # Add this with your other models
 class UserProfile(models.Model):
     GENDER_CHOICES = [
@@ -191,8 +194,6 @@ class PhieuThuTien(models.Model):
         super().save(*args, **kwargs)
         # Update customer's debt
         self.MaKH.SoTienNo -= diff
-        if self.MaKH.SoTienNo < 0:
-            raise ValueError("Số tiền nợ không thể âm.")
         self.MaKH.save()
               
     def delete(self, *args, **kwargs):
@@ -231,17 +232,16 @@ class HoaDon(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             super().save(*args, **kwargs)
-        
         else:
             self.TongTien = sum(ct.ThanhTien for ct in self.ct_hoadon.all())
             self.ConLai = self.TongTien - self.SoTienTra
-            old = HoaDon.objects.get(pk=self.pk)
-            diff = self.ConLai - old.ConLai
-            self.MaKH.SoTienNo += diff
 
-            if self.MaKH.SoTienNo < 0:
-                raise ValueError("Số tiền nợ không thể âm.")
-        
+            # only update SoTienNo after KH paid
+            if self.SoTienTra > 0:
+                old = HoaDon.objects.get(pk=self.pk)
+                diff = self.ConLai - old.ConLai
+                self.MaKH.SoTienNo += diff
+
             super().save(*args, **kwargs)
             self.MaKH.save()
     
@@ -266,18 +266,18 @@ class CT_HoaDon(models.Model):
 
         sach = self.MaSach
         sach.SLTon -= self.SLBan
-        if sach.SLTon < 0:
-            raise ValueError("Số lượng sách không đủ để bán.")
         sach.save()
 
     def delete(self, *args, **kwargs):
         # Update HoaDon: TongTien and ConLai
         hoadon = self.MaHD
-        super().delete(*args, **kwargs)
-        hoadon.save()
-
+        # Update Sach: SLTon
         sach = self.MaSach
         sach.SLTon += self.SLBan
+
+        super().delete(*args, **kwargs)
+        
+        hoadon.save()
         sach.save()
 
 class BaoCaoTon(models.Model):
@@ -287,6 +287,68 @@ class BaoCaoTon(models.Model):
 
     def __str__(self):
         return f"Báo cáo tồn - Tháng {self.Thang}"
+    
+    def get_first_date_in_phieunhapsach(self):
+        return PhieuNhapSach.objects.order_by('NgayNhap').values_list('NgayNhap', flat=True).first()
+    
+    def get_last_date_in_phieunhapsach(self):
+        return PhieuNhapSach.objects.order_by('NgayNhap').values_list('NgayNhap', flat=True).last()
+    
+    def save(self, *args, **kwargs):
+        first_date = self.get_first_date_in_phieunhapsach()
+        last_date = self.get_last_date_in_phieunhapsach()
+        # if not first_date:
+        #     raise ValueError("No data in PhieuNhapSach to determine starting month.")
+
+        first_thang = first_date.replace(day=1)
+        current_thang = first_thang
+        last_thang = last_date.replace(day=1)
+
+        with transaction.atomic():
+            prev_thang = None
+            while current_thang <= last_thang:
+                bc, _ = BaoCaoTon.objects.get_or_create(Thang=current_thang)
+                for sach in Sach.objects.all():
+                    phat_sinh = CT_NhapSach.objects.filter(
+                        MaPhieuNhap__NgayNhap__year=current_thang.year,
+                        MaPhieuNhap__NgayNhap__month=current_thang.month,
+                        MaSach=sach
+                    ).aggregate(total=Sum('SLNhap'))['total'] or 0
+
+                    sl_ban = CT_HoaDon.objects.filter(
+                        MaHD__NgayLap__year=current_thang.year,
+                        MaHD__NgayLap__month=current_thang.month,
+                        MaSach=sach
+                    ).aggregate(total=Sum('SLBan'))['total'] or 0
+
+                    if current_thang == first_thang:
+                        ton_dau = 0
+                    else:
+                        prev_ct = CT_BCTon.objects.filter(MaBCTon__Thang=prev_thang, MaSach=sach).first()
+                        ton_dau = prev_ct.TonCuoi
+
+                    ton_cuoi = ton_dau + phat_sinh - sl_ban
+                    ct_bcton = CT_BCTon.objects.update_or_create(
+                                                    MaBCTon=bc,
+                                                    MaSach=sach,
+                                                    TonDau=ton_dau,
+                                                    PhatSinh=phat_sinh,
+                                                    TonCuoi=ton_cuoi
+                                                )
+                prev_thang = current_thang
+
+                # Move to next month
+                year = current_thang.year + (current_thang.month // 12)
+                month = current_thang.month % 12 + 1
+                current_thang = date(year, month, 1)
+
+        # Do not call super().save() to avoid infinite recursion, as we used get_or_create
+        # Only create this instance if it was not part of the loop above
+        # if not BaoCaoTon.objects.filter(Thang=self.Thang).exists():
+        #     super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
     
 class CT_BCTon(models.Model):
     MaBCTon = models.ForeignKey(BaoCaoTon, on_delete=models.CASCADE)
@@ -302,6 +364,12 @@ class CT_BCTon(models.Model):
 
     def __str__(self):
         return f"Chi tiết báo cáo tồn - {self.MaBCTon} - {self.MaSach}"
+    
+    def save(self, *args, **kwargs):
+        pass
+
+    def delete(self, *args, **kwargs):
+        pass
 
 class BaoCaoCongNo(models.Model):
     MaBCCN = models.AutoField(primary_key=True)
@@ -310,6 +378,63 @@ class BaoCaoCongNo(models.Model):
 
     def __str__(self):
         return f"Báo cáo công nợ - Tháng {self.Thang}"
+    
+    def get_first_date_in_hoadon(self):
+        return HoaDon.objects.order_by('NgayLap').values_list('NgayLap', flat=True).first()
+    
+    def get_last_date_in_hoadon(self):
+        return HoaDon.objects.order_by('NgayLap').values_list('NgayLap', flat=True).last()
+
+    def save(self, *args, **kwargs):
+        first_date = self.get_first_date_in_hoadon()
+        last_date = self.get_last_date_in_hoadon()
+        # if not first_date:
+        #     raise ValueError("No data in PhieuNhapSach to determine starting month.")
+
+        first_thang = first_date.replace(day=1)
+        current_thang = first_thang
+        last_thang = last_date.replace(day=1)
+
+        with transaction.atomic():
+            prev_thang = None
+            while current_thang <= last_thang:
+                bc, _ = BaoCaoCongNo.objects.get_or_create(Thang=current_thang)
+                for kh in KhachHang.objects.all():
+                    phat_sinh = HoaDon.objects.filter(
+                        NgayLap__year=current_thang.year,
+                        NgayLap__month=current_thang.month,
+                        MaKH=kh
+                    ).aggregate(total=Sum('ConLai'))['total'] or 0
+
+                    TienTra = PhieuThuTien.objects.filter(
+                        NgayThu__year=current_thang.year,
+                        NgayThu__month=current_thang.month,
+                        MaKH=kh
+                    ).aggregate(total=Sum('SoTienThu'))['total'] or 0
+
+                    if current_thang == first_thang:
+                        no_dau = 0
+                    else:
+                        prev_ct = CT_BCCongNo.objects.filter(MaBCCN__Thang=prev_thang, MaKH=kh).first()
+                        no_dau = prev_ct.NoCuoi
+
+                    no_cuoi = no_dau + phat_sinh - TienTra
+                    ct_bccn, _ = CT_BCCongNo.objects.update_or_create(
+                                                        MaBCCN=bc,
+                                                        MaKH=kh,
+                                                        NoDau=no_dau,
+                                                        PhatSinh=phat_sinh,
+                                                        NoCuoi=no_cuoi
+                                                    )
+                prev_thang = current_thang
+
+                # Move to next month
+                year = current_thang.year + (current_thang.month // 12)
+                month = current_thang.month % 12 + 1
+                current_thang = date(year, month, 1)
+
+    def delete(self, *args, **kwargs):
+        pass
     
 class CT_BCCongNo(models.Model):
     MaBCCN = models.ForeignKey(BaoCaoCongNo, on_delete=models.CASCADE)
@@ -326,3 +451,8 @@ class CT_BCCongNo(models.Model):
     def __str__(self):
         return f"Chi tiết báo cáo công nợ - {self.MaBCCN} - {self.MaKH}"
 
+    def save(self, *args, **kwargs):
+        pass
+
+    def delete(self, *args, **kwargs):
+        pass
