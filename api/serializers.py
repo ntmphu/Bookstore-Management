@@ -287,7 +287,7 @@ class CTNhapSachSerializer(serializers.ModelSerializer):
         current_slton = sach.SLTon
         # update case
         if self.instance:
-            old_sln = self.SLNhap
+            old_sln = self.instance.SLNhap
             diff = sl_nhap - old_sln
             if diff > 0:
                 if current_slton > thamso.TonTD:
