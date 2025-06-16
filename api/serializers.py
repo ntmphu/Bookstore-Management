@@ -865,18 +865,28 @@ def get_valid_groups():
 
 class UserSerializer(serializers.ModelSerializer):
     gioiTinh = serializers.CharField(source='profile.gioiTinh', required=False)
-    role = serializers.ChoiceField(choices=[], required=False)  # Empty choices initially
+    role = serializers.CharField(required=False)  # Replace ChoiceField with CharField
+
     is_active = serializers.BooleanField(read_only=True)  # Add this field
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Update choices dynamically
-        self.fields['role'].choices = [(group, group) for group in get_valid_groups()]
+        self.valid_roles = [group.name for group in Group.objects.all()]
+
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'gioiTinh', 'role', 'is_active']
 
+    def validate_role(self, value):
+        """Custom validation for the role field."""
+        if value not in self.valid_roles:
+            raise serializers.ValidationError(
+                f"Nhóm người dùng '{value}' không tồn tại trong hệ thống. Vui lòng chọn một trong các nhóm: {', '.join(self.valid_roles)}"
+            )
+        return value
+    
     def get_role(self, obj):
         return obj.groups.first().name if obj.groups.exists() else None
     
@@ -903,19 +913,19 @@ class UserSerializer(serializers.ModelSerializer):
                 instance.groups.add(group)
             except Group.DoesNotExist:
                 raise serializers.ValidationError({
-                    'role': f"Nhóm người dùng '{role}' không tồn tại trong hệ thống. Vui lòng chọn một trong các nhóm: {', '.join(VALID_GROUPS)}"
+                    'role': f"Nhóm người dùng '{role}' không tồn tại trong hệ thống. Vui lòng chọn một trong các nhóm: {', '.join(self.valid_roles)}"
                 })
             
         return super().update(instance, validated_data)
 
 class CreateUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    role = serializers.ChoiceField(choices=[], write_only=True, required=True)
+    role = serializers.CharField(write_only=True, required=True)  # Change ChoiceField to CharField
     group = serializers.SerializerMethodField(read_only=True)  # Add this for reading group
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['role'].choices = [(group, group) for group in get_valid_groups()]
+        self.valid_roles = [group.name for group in Group.objects.all()]  # Fetch valid roles dynamically
 
     class Meta:
         model = User
@@ -924,6 +934,14 @@ class CreateUserSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("Username already exists")
+        return value
+
+    def validate_role(self, value):
+        """Custom validation for the role field."""
+        if value not in self.valid_roles:
+            raise serializers.ValidationError(
+                f"Nhóm người dùng '{value}' không tồn tại trong hệ thống. Vui lòng chọn một trong các nhóm: {', '.join(self.valid_roles)}"
+            )
         return value
 
     def get_group(self, obj):
@@ -944,7 +962,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         except Group.DoesNotExist:
             user.delete()  # Cleanup if group assignment fails
             raise serializers.ValidationError({
-                'role': f"Group '{role}' does not exist. Valid groups are: {', '.join(get_valid_groups())}"
+                'role': f"Nhóm người dùng '{role}' không tồn tại trong hệ thống. Vui lòng chọn một trong các nhóm: {', '.join(self.valid_roles)}"
             })
         return user
 
