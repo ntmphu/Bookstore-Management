@@ -222,7 +222,7 @@ class HoaDon(models.Model):
         verbose_name='Người lập Hóa Đơn'
     )
     TongTien = models.DecimalField(max_digits=15, decimal_places=0, default=0, editable=False, null=True)
-    SoTienTra = models.DecimalField(max_digits=15, decimal_places=0, blank=True, default=0, null=True)
+    SoTienTra = models.DecimalField(max_digits=15, decimal_places=0, blank=True, default=None, null=True)
     ConLai = models.DecimalField(max_digits=15, decimal_places=0, default=0, editable=False, null=True)
     MaSach = models.ManyToManyField(Sach, through='CT_HoaDon', related_name='HoaDon')
 
@@ -234,16 +234,19 @@ class HoaDon(models.Model):
             super().save(*args, **kwargs)
         else:
             self.TongTien = sum(ct.ThanhTien for ct in self.ct_hoadon.all())
-            self.ConLai = self.TongTien - self.SoTienTra
+            if self.SoTienTra:
+                self.ConLai = self.TongTien - self.SoTienTra
+            else:
+                self.ConLai = self.TongTien
 
-            # only update SoTienNo after KH paid
-            if self.SoTienTra > 0:
+            # only update SoTienNo after KH paid (ie, SoTienTra != None)
+            if self.SoTienTra:
                 old = HoaDon.objects.get(pk=self.pk)
                 diff = self.ConLai - old.ConLai
-                self.MaKH.SoTienNo += diff
+                self.MaKH.SoTienNo -= diff
+                self.MaKH.save()
 
             super().save(*args, **kwargs)
-            self.MaKH.save()
     
 class CT_HoaDon(models.Model):
     MaHD = models.ForeignKey(HoaDon, on_delete=models.CASCADE, related_name='ct_hoadon')

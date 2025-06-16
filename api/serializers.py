@@ -466,6 +466,8 @@ class HoaDonSerializer(serializers.ModelSerializer):
     MaKH = serializers.SerializerMethodField()
     HoTen = serializers.CharField(source='MaKH.HoTen', read_only=True)
     NguoiLapHD = serializers.SerializerMethodField()
+    # TongTien = serializers.SerializerMethodField()
+    # ConLai = serializers.SerializerMethodField()
 
     class Meta:
         model = HoaDon
@@ -483,23 +485,36 @@ class HoaDonSerializer(serializers.ModelSerializer):
     
     def get_NguoiLapHD(self, obj):
         return f'NV{obj.NguoiLapHD.id:03d}'
+    
+    # def get_TongTien(self, obj):
+    #     return obj.TongTien
+    
+    # def get_ConLai(self, obj):
+    #     return obj.ConLai
 
     def validate_SoTienTra(self, value):
         if value < 0:
             raise serializers.ValidationError("Số tiền trả không được âm.")
-        if value > self.TongTien:
-            raise serializers.ValidationError({
-                'SoTienTra': f"Số tiền trả ({value}) không được vượt quá tổng tiền ({self.TongTien})."
-            })
         return value
     
-    # def update(self, instance, validated_data):
-        # sotientra = validated_data.get("SoTienTra", instance.SoTienTra)
-    #     instance.SoTienTra = sotientra
-    #     # instance.ConLai = instance.TongTien - instance.SoTienTra
-    #     instance.save()
-
-    #     return instance
+    def update(self, instance, validated_data):
+        validated_data.pop('MaKH_input', None)
+        validated_data.pop('NguoiLapHD_input', None)
+        sotientra = validated_data.get("SoTienTra", None)
+        # 
+        if sotientra is None:
+            for field in ['MaKH', 'NguoiLapHD']:
+                setattr(instance, field, validated_data.get(field))
+        # update new sotientra
+        else:
+            if sotientra > instance.TongTien:
+                raise serializers.ValidationError({
+                    'SoTienTra': f"Số tiền trả ({sotientra}) không được vượt quá tổng tiền ({instance.TongTien})."
+                })
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+        instance.save()
+        return instance
     
     def validate(self, data):
         ma_kh_input = data.get('MaKH_input')
