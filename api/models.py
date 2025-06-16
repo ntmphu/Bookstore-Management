@@ -8,10 +8,6 @@ from django.conf import settings
 # Add this after the imports
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db import transaction
-from django.utils.timezone import make_aware
-from datetime import date, timedelta
-from django.db.models import Sum
 # Add this with your other models
 class UserProfile(models.Model):
     GENDER_CHOICES = [
@@ -298,6 +294,13 @@ class BaoCaoTon(models.Model):
         return PhieuNhapSach.objects.order_by('NgayNhap').values_list('NgayNhap', flat=True).last()
     
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+    def generate_all_reports(self):
+        from datetime import date
+        from django.db import transaction
+        from django.db.models import Sum
+
         first_date = self.get_first_date_in_phieunhapsach()
         last_date = self.get_last_date_in_phieunhapsach()
         # if not first_date:
@@ -307,6 +310,7 @@ class BaoCaoTon(models.Model):
         current_thang = first_thang
         last_thang = last_date.replace(day=1)
 
+        # print(first_thang, last_thang)
         with transaction.atomic():
             prev_thang = None
             while current_thang <= last_thang:
@@ -324,11 +328,11 @@ class BaoCaoTon(models.Model):
                         MaSach=sach
                     ).aggregate(total=Sum('SLBan'))['total'] or 0
 
-                    if current_thang == first_thang:
+                    if not prev_thang:
                         ton_dau = 0
                     else:
                         prev_ct = CT_BCTon.objects.filter(MaBCTon__Thang=prev_thang, MaSach=sach).first()
-                        ton_dau = prev_ct.TonCuoi
+                        ton_dau = prev_ct.TonCuoi 
 
                     ton_cuoi = ton_dau + phat_sinh - sl_ban
                     ct_bcton = CT_BCTon.objects.update_or_create(
@@ -369,7 +373,7 @@ class CT_BCTon(models.Model):
         return f"Chi tiết báo cáo tồn - {self.MaBCTon} - {self.MaSach}"
     
     def save(self, *args, **kwargs):
-        pass
+        super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         pass
@@ -389,6 +393,13 @@ class BaoCaoCongNo(models.Model):
         return HoaDon.objects.order_by('NgayLap').values_list('NgayLap', flat=True).last()
 
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+    def generate_all_reports(self):
+        from datetime import date
+        from django.db import transaction
+        from django.db.models import Sum
+        
         first_date = self.get_first_date_in_hoadon()
         last_date = self.get_last_date_in_hoadon()
         # if not first_date:
@@ -455,7 +466,7 @@ class CT_BCCongNo(models.Model):
         return f"Chi tiết báo cáo công nợ - {self.MaBCCN} - {self.MaKH}"
 
     def save(self, *args, **kwargs):
-        pass
+        super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         pass

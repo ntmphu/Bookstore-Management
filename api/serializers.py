@@ -6,7 +6,7 @@ from .models import (
     BaoCaoTon, CT_BCTon, BaoCaoCongNo, CT_BCCongNo, ThamSo, NXB, 
     UserProfile
 )
-
+from datetime import date
 class UserProfile():
     serializers.ModelSerializer
 
@@ -671,25 +671,51 @@ class CT_BCTonSerializer(serializers.ModelSerializer):
         return f"{obj.MaBCTon.Thang.year}"
     
 class BaoCaoTonSerializer(serializers.ModelSerializer):
-    Thang = serializers.DateField(format="%m/%Y")
-    chi_tiet_ton = CT_BCTonSerializer(many=True, read_only=True)
+    Thang_input = serializers.IntegerField(required=True, write_only=True)
+    Nam_input = serializers.IntegerField(required=True, write_only=True)
+    # chi_tiet_ton = CT_BCTonSerializer(many=True, read_only=True)
     MaBCTon = serializers.SerializerMethodField()
+    Thang = serializers.DateField(format="%m/%y", read_only=True)
 
     class Meta:
         model = BaoCaoTon
-        fields = ['MaBCTon', 'Thang', 'chi_tiet_ton']
-        read_only_fields = fields
+        fields = ['MaBCTon', 'Thang_input', 'Nam_input', 'Thang']
     
     def get_MaBCTon(self, obj):
         return f"BCT{obj.MaBCTon:03d}"
-    
+
+    def get_Thang(self, obj):
+        return f"{obj.Thang}"
+
     def validate(self, data):
         first_date = PhieuNhapSach.objects.order_by('NgayNhap').values_list('NgayNhap', flat=True).first()
         if not first_date:
             raise serializers.ValidationError({
-                'Error': f"Không có dữ liệu nhập sách trong cơ sở dữ liệu."
+                'Error': f"Không có dữ liệu nhập/bán sách trong cơ sở dữ liệu."
             })
+        last_date = PhieuNhapSach.objects.order_by('NgayNhap').values_list('NgayNhap', flat=True).last()
+        month = data.get("Thang_input")
+        year = data.get("Nam_input")
+        request_date = date(year, month, 1)
+        
+        if request_date > last_date or request_date < first_date:
+            raise serializers.ValidationError({
+                'Error': f"Không có dữ liệu nhập/mua vào tháng {month}/{year}."
+            })
+
+        data['Thang'] = request_date
+        return data
     
+    def create(self, validated_data):
+        thang = validated_data.pop("Thang")
+        BaoCaoTon().generate_all_reports()
+        return BaoCaoTon.objects.get(Thang=thang)
+    
+    def update(self, instance, validated_data):
+        thang = validated_data.pop("Thang")
+        BaoCaoTon().generate_all_reports()
+        return BaoCaoTon.objects.get(Thang=thang)
+
 class CT_BCCNSerializer(serializers.ModelSerializer):
     TenKH = serializers.CharField(source='MaKH.HoTen', read_only=True)
     MaKH = serializers.SerializerMethodField()
@@ -719,24 +745,53 @@ class CT_BCCNSerializer(serializers.ModelSerializer):
         return f"{obj.MaBCCN.Thang.year}"
 
 class BaoCaoCongNoSerializer(serializers.ModelSerializer):
-    Thang = serializers.DateField(format="%m/%Y")
-    chi_tiet_no = CT_BCCNSerializer(many=True, read_only=True)
+    Thang_input = serializers.IntegerField(required=True, write_only=True)
+    Nam_input = serializers.IntegerField(required=True, write_only=True)
+    # chi_tiet_no = CT_BCCNSerializer(many=True, read_only=True)
     MaBCCN = serializers.SerializerMethodField()
+    Thang = serializers.DateField(format="%m/%y", read_only=True)
 
     class Meta:
         model = BaoCaoCongNo
-        fields = ['MaBCCN', 'Thang', 'chi_tiet_no']
-        read_only_fields = fields
+        fields = ['MaBCCN', 'Thang_input', 'Nam_input', 'Thang']
 
     def get_MaBCCN(self, obj):
         return f"BCCN{obj.MaBCCN:03d}"
     
+    def get_Thang(self, obj):
+        return f"{obj.Thang}"
+
     def validate(self, data):
+        m = data.get("Thang_input")
+        y = data.get("Nam_input")
+
         first_date = HoaDon.objects.order_by('NgayLap').values_list('NgayLap', flat=True).first()
         if not first_date:
             raise serializers.ValidationError({
-                'Error': f"Không có dữ liệu mua sách trong cơ sở dữ liệu."
+                'Error': f"Không có dữ liệu nợ/thu trong cơ sở dữ liệu."
             })
+        last_date = HoaDon.objects.order_by('NgayLap').values_list('NgayLap', flat=True).last()
+
+        request_date = date(y, m, 1)
+        
+        if request_date > last_date or request_date < first_date:
+            raise serializers.ValidationError({
+                'Error': f"Không có dữ liệu nợ/thu vào tháng {m}/{y}."
+            })
+
+        data['Thang'] = request_date
+        return data
+
+    def create(self, validated_data):
+        thang = validated_data.pop("Thang")
+        BaoCaoCongNo().generate_all_reports()
+        return BaoCaoCongNo.objects.get(Thang=thang)
+    
+    def update(self, instance, validated_data):
+        thang = validated_data.pop("Thang")
+        BaoCaoCongNo().generate_all_reports()
+        return BaoCaoCongNo.objects.get(Thang=thang)
+
     
 class ThamSoSerializer(serializers.ModelSerializer):
     class Meta:
