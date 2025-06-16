@@ -241,16 +241,16 @@ class PhieuNhapSachViewSet(viewsets.ModelViewSet):
 
 # BaoCaoTon filterset
 class BaoCaoTonFilter(FilterSet):
-    thang = DateFilter(field_name='Thang', lookup_expr='month')
+    thang = DateFilter(field_name='Thang')
     # book/stock: filter by related CT_BCTon
-    maSach = NumberFilter(field_name='ct_bcton__MaSach__MaSach')
-    tenSach = CharFilter(field_name='ct_bcton__MaSach__MaDauSach__TenSach', lookup_expr='icontains')
-    tonDau = NumberFilter(field_name='ct_bcton__TonDau')
-    tonCuoi = NumberFilter(field_name='ct_bcton__TonCuoi')
+    maSach = NumberFilter(field_name='MaSach__MaSach')
+    tenSach = CharFilter(field_name='MaSach__MaDauSach__TenSach', lookup_expr='icontains')
+    # tonDau = NumberFilter(field_name='CT_BCTon__TonDau')
+    # tonCuoi = NumberFilter(field_name='CT_BCTon__TonCuoi')
 
     class Meta:
         model = BaoCaoTon
-        fields = ['Thang', 'ct_bcton__MaSach__MaSach', 'ct_bcton__MaSach__MaDauSach__TenSach', 'ct_bcton__TonDau', 'ct_bcton__TonCuoi']
+        fields = ['Thang', 'MaSach__MaSach', 'MaSach__MaDauSach__TenSach']
 
 class BaoCaoTonViewSet(viewsets.ModelViewSet):
     queryset = BaoCaoTon.objects.all()
@@ -261,15 +261,15 @@ class BaoCaoTonViewSet(viewsets.ModelViewSet):
 
 # BaoCaoCongNo filterset
 class BaoCaoCongNoFilter(FilterSet):
-    thang = DateFilter(field_name='Thang', lookup_expr='month')
-    maKH = NumberFilter(field_name='ct_bccongno__MaKH__MaKhachHang')
-    tenKH = CharFilter(field_name='ct_bccongno__MaKH__HoTen', lookup_expr='icontains')
-    noDau = NumberFilter(field_name='ct_bccongno__NoDau')
-    noCuoi = NumberFilter(field_name='ct_bccongno__NoCuoi')
+    thang = DateFilter(field_name='Thang')
+    maKH = NumberFilter(field_name='MaKH__MaKhachHang')
+    tenKH = CharFilter(field_name='MaKH__HoTen', lookup_expr='icontains')
+    # noDau = NumberFilter(field_name='CT_BCCN__NoDau')
+    # noCuoi = NumberFilter(field_name='CT_BCCN__NoCuoi')
 
     class Meta:
         model = BaoCaoCongNo
-        fields = ['Thang', 'ct_bccongno__MaKH__MaKhachHang', 'ct_bccongno__MaKH__HoTen', 'ct_bccongno__NoDau', 'ct_bccongno__NoCuoi']
+        fields = ['Thang', 'MaKH__MaKhachHang', 'MaKH__HoTen']
         
 class BaoCaoCongNoViewSet(viewsets.ModelViewSet):
     queryset = BaoCaoCongNo.objects.all()

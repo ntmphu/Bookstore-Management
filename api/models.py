@@ -115,31 +115,6 @@ class CT_NhapSach(models.Model):
     def __str__(self):
         return f"Chi tiết nhập #{self.MaPhieuNhap} - {self.MaSach}"
     
-    # def clean(self):
-    #     thamso = ThamSo.objects.first()
-    #     if not thamso:
-    #         raise ValidationError("Chưa cấu hình tham số hệ thống.")
-
-    #     # Rule 1: SLNhap >= SLNhapTT
-    #     if self.SLNhap < thamso.SLNhapTT:
-    #         raise ValidationError(
-    #             f"Số lượng nhập phải ≥ {thamso.SLNhapTT}."
-    #         )
-
-    #     # Rule 2: SLTon (after update) must not exceed TonTD
-    #     current_slton = self.MaSach.SLTon
-    #     if self.pk:
-    #         old_slnhap = CT_NhapSach.objects.get(pk=self.pk).SLNhap
-    #         diff = self.SLNhap - old_slnhap
-    #     else:
-    #         diff = self.SLNhap
-    #     new_slton = current_slton + diff
-        
-    #     if new_slton > thamso.TonTD:
-    #         raise ValidationError(
-    #             f"Tồn sau khi nhập ({new_slton}) vượt quá giới hạn tồn tối đa ({thamso.TonTD})."
-    #         )
-    
     def save(self, *args, **kwargs):
         # self.clean()  # Validate before saving
         # --- Update case ---
@@ -161,6 +136,7 @@ class CT_NhapSach(models.Model):
         # When deleting, subtract the imported quantity
         self.MaSach.SLTon -= self.SLNhap
         self.MaSach.save()
+
         super().delete(*args, **kwargs)
 
 class PhieuThuTien(models.Model):
@@ -239,7 +215,7 @@ class HoaDon(models.Model):
             if self.SoTienTra:
                 old = HoaDon.objects.get(pk=self.pk)
                 diff = self.ConLai - old.ConLai
-                self.MaKH.SoTienNo -= diff
+                self.MaKH.SoTienNo += diff
                 self.MaKH.save()
 
             super().save(*args, **kwargs)
@@ -335,12 +311,14 @@ class BaoCaoTon(models.Model):
                         ton_dau = prev_ct.TonCuoi 
 
                     ton_cuoi = ton_dau + phat_sinh - sl_ban
-                    ct_bcton = CT_BCTon.objects.update_or_create(
+                    ct_bcton, _ = CT_BCTon.objects.update_or_create(
                                                     MaBCTon=bc,
                                                     MaSach=sach,
-                                                    TonDau=ton_dau,
-                                                    PhatSinh=phat_sinh,
-                                                    TonCuoi=ton_cuoi
+                                                    defaults={
+                                                        'TonDau': ton_dau,
+                                                        'PhatSinh': phat_sinh,
+                                                        'TonCuoi': ton_cuoi,
+                                                    }
                                                 )
                 prev_thang = current_thang
 
@@ -436,9 +414,11 @@ class BaoCaoCongNo(models.Model):
                     ct_bccn, _ = CT_BCCongNo.objects.update_or_create(
                                                         MaBCCN=bc,
                                                         MaKH=kh,
-                                                        NoDau=no_dau,
-                                                        PhatSinh=phat_sinh,
-                                                        NoCuoi=no_cuoi
+                                                        defaults={
+                                                            'NoDau': no_dau,
+                                                            'PhatSinh': phat_sinh,
+                                                            'NoCuoi': no_cuoi,
+                                                        }
                                                     )
                 prev_thang = current_thang
 
