@@ -675,7 +675,7 @@ class BaoCaoTonSerializer(serializers.ModelSerializer):
     Nam_input = serializers.IntegerField(required=True, write_only=True)
     # chi_tiet_ton = CT_BCTonSerializer(many=True, read_only=True)
     MaBCTon = serializers.SerializerMethodField()
-    Thang = serializers.DateField(format="%m/%y", read_only=True)
+    Thang = serializers.DateField(format="%m/%Y", read_only=True)
 
     class Meta:
         model = BaoCaoTon
@@ -749,7 +749,7 @@ class BaoCaoCongNoSerializer(serializers.ModelSerializer):
     Nam_input = serializers.IntegerField(required=True, write_only=True)
     # chi_tiet_no = CT_BCCNSerializer(many=True, read_only=True)
     MaBCCN = serializers.SerializerMethodField()
-    Thang = serializers.DateField(format="%m/%y", read_only=True)
+    Thang = serializers.DateField(format="%m/%Y", read_only=True)
 
     class Meta:
         model = BaoCaoCongNo
