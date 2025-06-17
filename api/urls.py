@@ -1,10 +1,11 @@
 from rest_framework import routers
+from django.urls import path, include
 from .views import (
     KhachHangViewSet, SachViewSet, HoaDonViewSet, CTHoaDonViewSet, PhieuThuTienViewSet,
     DauSachViewSet, TacGiaViewSet, TheLoaiViewSet, NXBViewSet,
     PhieuNhapSachViewSet, CTNhapSachViewSet,
     BaoCaoTonViewSet, CTBCTonViewSet, BaoCaoCongNoViewSet, CTBCCongNoViewSet, ThamSoViewSet,
-    UserManagementViewSet, 
+    UserManagementViewSet, bcton_excel, bccno_excel
 )
 
 router = routers.DefaultRouter()
@@ -26,4 +27,9 @@ router.register(r'thamso', ThamSoViewSet)
 router.register(r'nxb', NXBViewSet)
 router.register(r'user', UserManagementViewSet, basename='user')
 
-urlpatterns = router.urls
+
+urlpatterns = [
+    path('', include(router.urls)),  # include all ViewSet routes
+    path('baocaoton/<int:bcton_id>/excel/', bcton_excel, name='baocaoton-excel'),
+    path('baocaocongno/<int:bccno_id>/excel/', bccno_excel, name='baocaocongno-excel'),
+]
