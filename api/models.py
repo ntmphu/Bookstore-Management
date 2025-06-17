@@ -206,13 +206,13 @@ class HoaDon(models.Model):
             super().save(*args, **kwargs)
         else:
             self.TongTien = sum(ct.ThanhTien for ct in self.ct_hoadon.all())
-            if self.SoTienTra:
+            if self.SoTienTra is not None:
                 self.ConLai = self.TongTien - self.SoTienTra
             else:
                 self.ConLai = self.TongTien
 
             # only update SoTienNo after KH paid (ie, SoTienTra != None)
-            if self.SoTienTra:
+            if self.SoTienTra is not None:
                 old = HoaDon.objects.get(pk=self.pk)
                 diff = self.ConLai - old.ConLai
                 self.MaKH.SoTienNo += diff
