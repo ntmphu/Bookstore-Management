@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 from django.db import IntegrityError
 
 from .models import (
@@ -24,6 +24,11 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import UserSerializer, CreateUserSerializer
+
+import openpyxl
+from openpyxl.styles import Font, Border, Side, Alignment
+from django.http import HttpResponse
+from openpyxl.utils import get_column_letter
 
 
 def get_valid_groups():
@@ -270,7 +275,162 @@ class BaoCaoCongNoFilter(FilterSet):
     class Meta:
         model = BaoCaoCongNo
         fields = ['Thang', 'MaKH__MaKhachHang', 'MaKH__HoTen']
-        
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def bcton_excel(request, bcton_id):
+    try:
+        bct = BaoCaoTon.objects.get(MaBCTon=bcton_id)
+    except BaoCaoTon.DoesNotExist:
+        return HttpResponse("Báo cáo tồn không tồn tại", status=404)
+
+    # Lấy danh sách chi tiết tồn
+    ct_list = CT_BCTon.objects.filter(MaBCTon=bct).select_related('MaSach')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"Báo cáo tồn - Tháng {bct.Thang.strftime('%m-%Y')}"
+
+    bold_font = Font(bold=True)
+    center_align = Alignment(horizontal="center", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+
+
+    # Header
+    ws.merge_cells('A1:H1')  # Merge cells across 6 columns
+    title_cell = ws['A1']
+    title_cell.value = "BÁO CÁO TỒN"
+    title_cell.font = Font(size=14, bold=True)
+    title_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    ws.merge_cells('A2:H2')
+    subtitle_cell = ws['A2']
+    subtitle_cell.value = f"Tháng {bct.Thang.strftime('%m-%Y')}"
+    subtitle_cell.font = Font(size=12, bold=True)
+    subtitle_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    ws.append([])
+
+    # Table header
+    headers = ["STT", "Mã sách", "Tên sách", "NXB", "Năm xuất bản", "Tồn đầu", "Phát sinh", "Tồn cuối"]
+    ws.append(headers)
+
+    for col_num, header in enumerate(headers, start=1):
+        cell = ws.cell(row=4, column=col_num)
+        cell.font = bold_font
+        cell.alignment = center_align
+        cell.border = thin_border
+
+    # Table rows
+    for idx, ct in enumerate(ct_list, start=1):
+        row_data = [
+            idx,
+            ct.MaSach.MaSach,
+            ct.MaSach.MaDauSach.TenSach,
+            ct.MaSach.NXB.TenNXB,
+            ct.MaSach.NamXB,
+            ct.TonDau,
+            ct.PhatSinh,
+            ct.TonCuoi
+        ]
+        ws.append(row_data)
+
+        # Apply borders and alignment to the entire row
+        for col_num, value in enumerate(row_data, start=1):
+            cell = ws.cell(row=4 + idx, column=col_num)
+            cell.alignment = center_align
+            cell.border = thin_border
+
+    # Auto-size columns
+    for col in range(1, len(headers)+1):
+        ws.column_dimensions[get_column_letter(col)].width = 20
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    filename = f"baocaoton_{bct.Thang.strftime('%m_%Y')}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def bccno_excel(request, bccno_id):
+    try:
+        bccn = BaoCaoCongNo.objects.get(MaBCCN=bccno_id)
+    except BaoCaoCongNo.DoesNotExist:
+        return HttpResponse("Báo cáo công nợ không tồn tại", status=404)
+
+    # Lấy danh sách chi tiết tồn
+    ct_list = CT_BCCongNo.objects.filter(MaBCCN=bccn).select_related('MaKH')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"Báo cáo công nợ - Tháng {bccn.Thang.strftime('%m-%Y')}"
+
+    bold_font = Font(bold=True)
+    center_align = Alignment(horizontal="center", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+
+    # Header
+    ws.merge_cells('A1:H1')  # Merge cells across 6 columns
+    title_cell = ws['A1']
+    title_cell.value = "BÁO CÁO CÔNG NỢ"
+    title_cell.font = Font(size=14, bold=True)
+    title_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    ws.merge_cells('A2:H2')
+    subtitle_cell = ws['A2']
+    subtitle_cell.value = f"Tháng {bccn.Thang.strftime('%m-%Y')}"
+    subtitle_cell.font = Font(size=12, bold=True)
+    subtitle_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    ws.append([])
+
+    # Table header
+    headers = ["STT", "Mã khách hàng", "Tên khách hàng", "Số Điện Thoại", "Email", "Nợ đầu", "Phát sinh", "Nợ cuối"]
+    ws.append(headers)
+
+    for col_num, header in enumerate(headers, start=1):
+        cell = ws.cell(row=4, column=col_num)
+        cell.font = bold_font
+        cell.alignment = center_align
+        cell.border = thin_border
+
+    # Table rows
+    for idx, ct in enumerate(ct_list, start=1):
+        row_data = [
+            idx,
+            ct.MaKH.MaKhachHang,
+            ct.MaKH.HoTen,
+            ct.MaKH.DienThoai,
+            ct.MaKH.Email,
+            ct.NoDau,
+            ct.PhatSinh,
+            ct.NoCuoi
+        ]
+        ws.append(row_data)
+
+        # Apply borders and alignment to the entire row
+        for col_num, value in enumerate(row_data, start=1):
+            cell = ws.cell(row=4 + idx, column=col_num)
+            cell.alignment = center_align
+            cell.border = thin_border
+
+    # Auto-size columns
+    for col in range(1, len(headers)+1):
+        ws.column_dimensions[get_column_letter(col)].width = 20
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    filename = f"baocaocongno_{bccn.Thang.strftime('%m_%Y')}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
+
 class BaoCaoCongNoViewSet(viewsets.ModelViewSet):
     queryset = BaoCaoCongNo.objects.all()
     serializer_class = BaoCaoCongNoSerializer
