@@ -24,6 +24,20 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import UserSerializer, CreateUserSerializer
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from io import BytesIO
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import Paragraph
+from django.conf import settings
+import os
+from reportlab.lib.utils import ImageReader
+
 
 
 def get_valid_groups():
@@ -290,9 +304,169 @@ class HoaDonFilter(FilterSet):
         model = HoaDon
         fields = ['MaHD', 'NgayLap', 'MaKH__MaKhachHang', 'MaKH__HoTen']
 # HoaDon: Nguoilaphd (full), Nguoithu (view), Quanli (all)
+
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+import os
+
 class HoaDonViewSet(viewsets.ModelViewSet):
     queryset = HoaDon.objects.all()
     serializer_class = HoaDonSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_class = HoaDonFilter
+
+    @action(detail=True, methods=['get'], url_path='export-pdf')
+    def export_pdf(self, request, pk=None):
+        try:
+            # Register fonts
+            font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'arial unicode ms.otf')
+            font_bold_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'arial unicode ms bold.otf')
+            pdfmetrics.registerFont(TTFont('Arial Unicode', font_path))
+            pdfmetrics.registerFont(TTFont('Arial Unicode Bold', font_bold_path))
+
+            # Fetch data
+            hoadon = self.get_object()
+            cthoadon_list = CT_HoaDon.objects.filter(MaHD=hoadon)
+
+            # Create PDF response
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="hoadon_{hoadon.MaHD}.pdf"'
+
+            # Set up PDF with margins
+            pdf = canvas.Canvas(response, pagesize=A4)
+            width, height = A4
+            left_margin = 2*cm
+            right_margin = width - 2*cm
+            effective_width = right_margin - left_margin
+
+            # Add logo
+            logo_path = os.path.join(settings.BASE_DIR, 'static', 'logo.png')
+            pdf.drawImage(logo_path, left_margin, height - 3*cm, width=50, height=50)
+
+            # Title with more spacing
+            pdf.setFont('Arial Unicode Bold', 16)
+            pdf.drawString(left_margin + (effective_width/2 - 70), height - 3.5*cm, "CHI TIẾT HÓA ĐƠN")
+
+            # Start content below logo and title
+            y = height - 5*cm
+
+            # Two columns for information
+            col_width = (effective_width - 1*cm) / 2
+            
+            # Information headers with blue background
+            pdf.setFillColor(colors.HexColor('#4D94FF'))
+            pdf.rect(left_margin, y, col_width, 25, fill=1)
+            pdf.rect(left_margin + col_width + 1*cm, y, col_width, 25, fill=1)
+            
+            # Header text
+            pdf.setFillColor(colors.white)
+            pdf.setFont('Arial Unicode Bold', 12)
+            pdf.drawString(left_margin + 50, y + 7, "Thông Tin Hóa Đơn")
+            pdf.drawString(left_margin + col_width + 1*cm + 50, y + 7, "Thông Tin Khách Hàng")
+
+            # Content
+            pdf.setFillColor(colors.black)
+            pdf.setFont('Arial Unicode', 12)
+            y -= 40
+
+            # Left column content
+            left_x = left_margin
+            pdf.drawString(left_x, y, f"Ngày Lập: {hoadon.NgayLap.strftime('%d/%m/%Y')}")
+            pdf.drawString(left_x, y - 25, f"Mã Hóa Đơn: {hoadon.MaHD}")
+            pdf.drawString(left_x, y - 50, f"Mã Nhân Viên: NV{hoadon.NguoiLapHD.id:03d}")
+            pdf.drawString(left_x, y - 75, f"Tên Nhân Viên: {hoadon.NguoiLapHD.first_name} {hoadon.NguoiLapHD.last_name}")
+
+            # Right column content
+            right_x = left_margin + col_width + 1*cm
+            pdf.drawString(right_x, y, f"Mã Khách Hàng: KH{hoadon.MaKH.MaKhachHang:03d}")
+            pdf.drawString(right_x, y - 25, f"Tên Khách Hàng: {hoadon.MaKH.HoTen}")
+            pdf.drawString(right_x, y - 50, f"Số Điện Thoại: {hoadon.MaKH.DienThoai}")
+            pdf.drawString(right_x, y - 75, f"Email: {hoadon.MaKH.Email}")
+
+            # Book list header with blue background
+            y -= 125
+            pdf.setFillColor(colors.HexColor('#4D94FF'))
+            pdf.rect(left_margin, y, effective_width, 25, fill=1)
+            
+            pdf.setFillColor(colors.white)
+            pdf.setFont('Arial Unicode Bold', 12)
+            pdf.drawString(left_margin + (effective_width/2 - 80), y + 7, "Danh Sách Sách Đã Mua")
+
+            # Table headers
+            
+            
+            headers = ['No.', 'Mã Sách', 'Tên Sách', 'SL', 'Đơn Giá', 'Thành Tiền']
+            col_widths = [30, 60, effective_width - 350, 60, 80, 120]  # Adjusted last column wider
+            
+            # Draw table header
+            y -= 30
+            x = left_margin
+            pdf.setFont('Arial Unicode Bold', 12)
+            pdf.setFillColor(colors.black)
+            # Table headers
+            for header, width in zip(headers, col_widths):
+                pdf.rect(x, y, width, 25)
+                # Center text horizontally
+                text_width = pdf.stringWidth(header, 'Arial Unicode Bold', 12)
+                x_centered = x + (width - text_width)/2
+                # Center text vertically (25 is row height)
+                y_centered = y + ((25 - 12)/2)  # 12 is font size
+                pdf.drawString(x_centered, y_centered, header)
+                x += width
+
+            # Table content
+            
+            pdf.setFont('Arial Unicode', 12)
+            # y -= 25
+            total_books = 0
+            total_price = 0
+
+            for idx, ct in enumerate(cthoadon_list, start=1):
+                x = left_margin
+                row_height = 25
+                thanh_tien = ct.SLBan * ct.GiaBan
+                total_books += ct.SLBan
+                total_price += thanh_tien
+
+                row_data = [
+                    str(idx),
+                    f"S{ct.MaSach.MaSach:03d}",
+                    ct.MaSach.MaDauSach.TenSach,
+                    str(ct.SLBan),
+                    f"{ct.GiaBan:,}đ",
+                    f"{thanh_tien:,} VNĐ"
+                ]
+
+                for data, width in zip(row_data, col_widths):
+                    pdf.rect(x, y - row_height, width, row_height)
+                    # Center align for all columns except book name
+                    if width != effective_width - 350:  # If not the book name column
+                        text_width = pdf.stringWidth(data, 'Arial Unicode', 12)
+                        x_centered = x + (width - text_width)/2
+                        pdf.drawString(x_centered, y - row_height + 7, data)
+                    else:
+                        pdf.drawString(x + 5, y - row_height + 7, data)
+                    x += width
+                y -= row_height
+
+            # Summary
+            y -= 30
+            pdf.drawString(left_margin, y, f"Tổng Số Sách: {total_books} quyển")
+            y -= 25
+            pdf.drawString(left_margin, y, f"Tổng Tiền Sách: {total_price:,} VNĐ")
+            y -= 25
+            pdf.drawString(left_margin, y, f"Tiền Khách Trả: {hoadon.SoTienTra:,} VNĐ")
+            y -= 25
+            pdf.drawString(left_margin, y, f"Còn Lại: {hoadon.ConLai:,} VNĐ")
+
+            pdf.save()
+            return response
+
+        except Exception as e:
+            return Response({"detail": str(e)}, status=400)
