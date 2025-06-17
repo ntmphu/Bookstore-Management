@@ -330,9 +330,10 @@ class CTNhapSachSerializer(serializers.ModelSerializer):
         return CT_NhapSach.objects.create(**validated_data)
     
     def update(self, instance, validated_data):
-        instance.email = validated_data.get('email', instance.email)
-        instance.content = validated_data.get('content', instance.content)
-        instance.created = validated_data.get('created', instance.created)
+        instance.SLNhap = validated_data.get('SLNhap', instance.SLNhap)
+        instance.GiaNhap = validated_data.get('GiaNhap', instance.GiaNhap)
+        # Update any other fields that exist in the CT_NhapSach model
+        instance.save()
         return instance
 
 class CTHoaDonSerializer(serializers.ModelSerializer):
