@@ -7,7 +7,7 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")  # Đổi 'tenproject' thành tên project của bạn
 django.setup()
 
-from api.serializers import BaoCaoTonSerializer
+from api.serializers import BaoCaoCongNoSerializer
 
 baocao_data = [
   {'Thang_input': 6,
@@ -17,7 +17,7 @@ baocao_data = [
 success, failed = 0, 0
 
 for item in baocao_data:
-    serializer = BaoCaoTonSerializer(data=item)
+    serializer = BaoCaoCongNoSerializer(data=item)
     if serializer.is_valid():
         serializer.save()
         print(f"✅ Thêm thành công: {item}")
