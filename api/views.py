@@ -298,11 +298,10 @@ def bcton_excel(request, bcton_id):
         top=Side(style='thin'), bottom=Side(style='thin')
     )
 
-
     # Header
     ws.merge_cells('A1:H1')  # Merge cells across 6 columns
     title_cell = ws['A1']
-    title_cell.value = "BÁO CÁO TỒN"
+    title_cell.value = "BÁO CÁO TỒN TIỆM SÁCH TRÂN TRÂN"
     title_cell.font = Font(size=14, bold=True)
     title_cell.alignment = Alignment(horizontal='center', vertical='center')
 
@@ -315,7 +314,7 @@ def bcton_excel(request, bcton_id):
     ws.append([])
 
     # Table header
-    headers = ["STT", "Mã sách", "Tên sách", "NXB", "Năm xuất bản", "Tồn đầu", "Phát sinh", "Tồn cuối"]
+    headers = ["No.", "Mã sách", "Tên sách", "NXB", "Năm xuất bản", "Tồn đầu", "Phát sinh", "Tồn cuối"]
     ws.append(headers)
 
     for col_num, header in enumerate(headers, start=1):
@@ -328,7 +327,7 @@ def bcton_excel(request, bcton_id):
     for idx, ct in enumerate(ct_list, start=1):
         row_data = [
             idx,
-            ct.MaSach.MaSach,
+            f"S{ct.MaSach.MaSach:03d}",
             ct.MaSach.MaDauSach.TenSach,
             ct.MaSach.NXB.TenNXB,
             ct.MaSach.NamXB,
@@ -379,7 +378,7 @@ def bccno_excel(request, bccno_id):
     # Header
     ws.merge_cells('A1:H1')  # Merge cells across 6 columns
     title_cell = ws['A1']
-    title_cell.value = "BÁO CÁO CÔNG NỢ"
+    title_cell.value = "BÁO CÁO CÔNG NỢ TIỆM SÁCH TRÂN TRÂN"
     title_cell.font = Font(size=14, bold=True)
     title_cell.alignment = Alignment(horizontal='center', vertical='center')
 
@@ -392,7 +391,7 @@ def bccno_excel(request, bccno_id):
     ws.append([])
 
     # Table header
-    headers = ["STT", "Mã khách hàng", "Tên khách hàng", "Số Điện Thoại", "Email", "Nợ đầu", "Phát sinh", "Nợ cuối"]
+    headers = ["No.", "Mã khách hàng", "Tên khách hàng", "Số Điện Thoại", "Email", "Nợ đầu", "Phát sinh", "Nợ cuối"]
     ws.append(headers)
 
     for col_num, header in enumerate(headers, start=1):
@@ -405,7 +404,7 @@ def bccno_excel(request, bccno_id):
     for idx, ct in enumerate(ct_list, start=1):
         row_data = [
             idx,
-            ct.MaKH.MaKhachHang,
+            f"KH{ct.MaKH.MaKhachHang:03d}",
             ct.MaKH.HoTen,
             ct.MaKH.DienThoai,
             ct.MaKH.Email,
