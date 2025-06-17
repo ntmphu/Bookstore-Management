@@ -136,8 +136,89 @@ class CTHoaDonViewSet(viewsets.ModelViewSet):
 class PhieuThuTienViewSet(viewsets.ModelViewSet):
     queryset = PhieuThuTien.objects.all()
     serializer_class = PhieuThuTienSerializer
-
     permission_classes = [IsAuthenticated]
+    
+
+    @action(detail=True, methods=['get'], url_path='export-pdf')
+    def export_pdf(self, request, pk=None):
+        try:
+            # Register fonts
+            font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'arial unicode ms.otf')
+            font_bold_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'arial unicode ms bold.otf')
+            pdfmetrics.registerFont(TTFont('Arial Unicode', font_path))
+            pdfmetrics.registerFont(TTFont('Arial Unicode Bold', font_bold_path))
+
+            # Fetch data
+            phieuthu = self.get_object()
+
+            # Create PDF response
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="phieuthu_{phieuthu.MaPhieuThu}.pdf"'
+
+            # Set up PDF with margins
+            pdf = canvas.Canvas(response, pagesize=A4)
+            width, height = A4
+            left_margin = 2*cm
+            right_margin = width - 2*cm
+            effective_width = right_margin - left_margin
+
+            # Add logo
+            logo_path = os.path.join(settings.BASE_DIR, 'static', 'logo.png')
+            pdf.drawImage(logo_path, left_margin, height - 3*cm, width=50, height=50)
+
+            # Title with more spacing
+            pdf.setFont('Arial Unicode Bold', 16)
+            pdf.drawString(left_margin + (effective_width/2 - 70), height - 3.5*cm, "CHI TIẾT PHIẾU THU TIỀN")
+
+            # Start content below logo and title
+            y = height - 5*cm
+
+            # Two columns for information
+            col_width = (effective_width - 1*cm) / 2
+            
+            # Information headers with blue background
+            pdf.setFillColor(colors.HexColor('#4D94FF'))
+            pdf.rect(left_margin, y, col_width, 25, fill=1)
+            pdf.rect(left_margin + col_width + 1*cm, y, col_width, 25, fill=1)
+            
+            # Header text
+            pdf.setFillColor(colors.white)
+            pdf.setFont('Arial Unicode Bold', 12)
+            pdf.drawString(left_margin + 50, y + 7, "Thông Tin Phiếu Thu")
+            pdf.drawString(left_margin + col_width + 1*cm + 50, y + 7, "Thông Tin Khách Hàng")
+
+            # Content
+            pdf.setFillColor(colors.black)
+            pdf.setFont('Arial Unicode', 12)
+            y -= 40
+
+            # Left column content
+            left_x = left_margin
+            pdf.drawString(left_x, y, f"Ngày Thu: {phieuthu.NgayThu.strftime('%d/%m/%Y')}")
+            pdf.drawString(left_x, y - 25, f"Mã Phiếu Thu: PT{phieuthu.MaPhieuThu:03d}")
+            pdf.drawString(left_x, y - 50, f"Mã Nhân Viên: NV{phieuthu.NguoiThu.id:03d}")
+            pdf.drawString(left_x, y - 75, f"Họ Tên: {phieuthu.NguoiThu.first_name} {phieuthu.NguoiThu.last_name}")
+
+            # Right column content
+            right_x = left_margin + col_width + 1*cm
+            pdf.drawString(right_x, y, f"Mã Khách: KH{phieuthu.MaKH.MaKhachHang:03d}")
+            pdf.drawString(right_x, y - 25, f"Họ Tên: {phieuthu.MaKH.HoTen}")
+            pdf.drawString(right_x, y - 50, f"Số Điện Thoại: {phieuthu.MaKH.DienThoai}")
+            pdf.drawString(right_x, y - 75, f"Email: {phieuthu.MaKH.Email}")
+
+            # Amount information
+            y -= 125
+            pdf.setFont('Arial Unicode Bold', 12)
+            amount_text = f"Số Tiền Thu: {phieuthu.SoTienThu:,} VNĐ"
+            # Calculate position for right alignment
+            amount_width = pdf.stringWidth(amount_text, 'Arial Unicode Bold', 12)
+            pdf.drawString(right_margin - amount_width, y, amount_text)
+
+            pdf.save()
+            return response
+
+        except Exception as e:
+            return Response({"detail": str(e)}, status=400)
 
 # DauSach: Nguoi nhap (full), Quanli (all)
 class DauSachViewSet(viewsets.ModelViewSet):
