@@ -208,11 +208,7 @@ class PhieuThuTienViewSet(viewsets.ModelViewSet):
 
             # Amount information
             y -= 125
-            pdf.setFont('Arial Unicode Bold', 12)
-            amount_text = f"Số Tiền Thu: {phieuthu.SoTienThu:,} VNĐ"
-            # Calculate position for right alignment
-            amount_width = pdf.stringWidth(amount_text, 'Arial Unicode Bold', 12)
-            pdf.drawString(right_margin - amount_width, y, amount_text)
+            pdf.drawString(left_margin, y, f"Số Tiền Thu: {phieuthu.SoTienThu:,} VNĐ")
 
             pdf.save()
             return response
@@ -618,7 +614,7 @@ class HoaDonViewSet(viewsets.ModelViewSet):
             # Left column content
             left_x = left_margin
             pdf.drawString(left_x, y, f"Ngày Lập: {hoadon.NgayLap.strftime('%d/%m/%Y')}")
-            pdf.drawString(left_x, y - 25, f"Mã Hóa Đơn: {hoadon.MaHD}")
+            pdf.drawString(left_x, y - 25, f"Mã Hóa Đơn: HD{hoadon.MaHD:03d}")
             pdf.drawString(left_x, y - 50, f"Mã Nhân Viên: NV{hoadon.NguoiLapHD.id:03d}")
             pdf.drawString(left_x, y - 75, f"Tên Nhân Viên: {hoadon.NguoiLapHD.first_name} {hoadon.NguoiLapHD.last_name}")
 
@@ -629,7 +625,7 @@ class HoaDonViewSet(viewsets.ModelViewSet):
             pdf.drawString(right_x, y - 50, f"Số Điện Thoại: {hoadon.MaKH.DienThoai}")
             pdf.drawString(right_x, y - 75, f"Email: {hoadon.MaKH.Email}")
 
-            # Book list header with blue background
+            # Book list header
             y -= 125
             pdf.setFillColor(colors.HexColor('#4D94FF'))
             pdf.rect(left_margin, y, effective_width, 25, fill=1)
@@ -637,43 +633,53 @@ class HoaDonViewSet(viewsets.ModelViewSet):
             pdf.setFillColor(colors.white)
             pdf.setFont('Arial Unicode Bold', 12)
             pdf.drawString(left_margin + (effective_width/2 - 80), y + 7, "Danh Sách Sách Đã Mua")
-
-            # Table headers
             
-            
-            headers = ['No.', 'Mã Sách', 'Tên Sách', 'SL', 'Đơn Giá', 'Thành Tiền']
-            col_widths = [30, 60, effective_width - 350, 60, 80, 120]  # Adjusted last column wider
-            
-            # Draw table header
-            y -= 30
-            x = left_margin
-            pdf.setFont('Arial Unicode Bold', 12)
             pdf.setFillColor(colors.black)
             # Table headers
+            y -= 30
+            headers = ['No.', 'Mã Sách', 'Tên Sách', 'Số Lượng', 'Đơn Giá', 'Thành Tiền']
+            col_widths = [30, 60, effective_width - 350, 60, 80, 120]  # Last column wider
+            
+            # Draw header cells with background
+            x = left_margin
+           
+            # pdf.setFillColor(colors.HexColor('#E5E5E5'))  # Light gray background for headers
             for header, width in zip(headers, col_widths):
-                pdf.rect(x, y, width, 25)
-                # Center text horizontally
+                pdf.rect(x, y, width, 25, fill=0)
+                # Center align header text
                 text_width = pdf.stringWidth(header, 'Arial Unicode Bold', 12)
-                x_centered = x + (width - text_width)/2
-                # Center text vertically (25 is row height)
-                y_centered = y + ((25 - 12)/2)  # 12 is font size
-                pdf.drawString(x_centered, y_centered, header)
+                # pdf.setFillColor(colors.black)
+                pdf.drawString(x + (width - text_width)/2, y + 7, header)
                 x += width
 
-            # Table content
-            
+            # Table content with word wrapping for book title
+            def draw_wrapped_text(text, x, y, width, height):
+                from reportlab.lib.utils import simpleSplit
+                text_lines = simpleSplit(text, 'Arial Unicode', 12, width - 10)
+                y_offset = height - (row_height - 20)/2
+                for line in text_lines:
+                    pdf.drawString(x + 5, y + y_offset, line)
+                    y_offset -= 15
+
+            # Content rows
             pdf.setFont('Arial Unicode', 12)
             # y -= 25
             total_books = 0
             total_price = 0
+            row_height = 50  # Increased height for wrapped text
 
             for idx, ct in enumerate(cthoadon_list, start=1):
                 x = left_margin
-                row_height = 25
                 thanh_tien = ct.SLBan * ct.GiaBan
                 total_books += ct.SLBan
                 total_price += thanh_tien
 
+                # Draw row background alternating colors for better readability
+                pdf.setFillColor(colors.white if idx % 2 == 0 else colors.HexColor('#F9F9F9'))
+                pdf.rect(x, y - row_height, effective_width, row_height, fill=1)
+
+                # Draw cell content
+                pdf.setFillColor(colors.black)
                 row_data = [
                     str(idx),
                     f"S{ct.MaSach.MaSach:03d}",
@@ -685,25 +691,31 @@ class HoaDonViewSet(viewsets.ModelViewSet):
 
                 for data, width in zip(row_data, col_widths):
                     pdf.rect(x, y - row_height, width, row_height)
-                    # Center align for all columns except book name
-                    if width != effective_width - 350:  # If not the book name column
-                        text_width = pdf.stringWidth(data, 'Arial Unicode', 12)
-                        x_centered = x + (width - text_width)/2
-                        pdf.drawString(x_centered, y - row_height + 7, data)
+                    if width == effective_width - 350:  # Book title column
+                        draw_wrapped_text(data, x, y - row_height, width, row_height)
                     else:
-                        pdf.drawString(x + 5, y - row_height + 7, data)
+                        # Center align other columns
+                        text_width = pdf.stringWidth(data, 'Arial Unicode', 12)
+                        # pdf.drawString(x + (width - text_width)/2, y - row_height/2 + 6, data)
+                        text_x = x + (width - text_width)/2
+                        text_y = y - row_height + (row_height - 12)/2
+                        pdf.drawString(text_x, text_y, data)
                     x += width
                 y -= row_height
 
-            # Summary
+            # Summary section
             y -= 30
-            pdf.drawString(left_margin, y, f"Tổng Số Sách: {total_books} quyển")
-            y -= 25
-            pdf.drawString(left_margin, y, f"Tổng Tiền Sách: {total_price:,} VNĐ")
-            y -= 25
-            pdf.drawString(left_margin, y, f"Tiền Khách Trả: {hoadon.SoTienTra:,} VNĐ")
-            y -= 25
-            pdf.drawString(left_margin, y, f"Còn Lại: {hoadon.ConLai:,} VNĐ")
+            pdf.setFont('Arial Unicode Bold', 12)
+            summary_data = [
+                f"Tổng Số Sách: {total_books} quyển",
+                f"Tổng Tiền Sách: {total_price:,} VNĐ",
+                f"Tiền Khách Trả: {hoadon.SoTienTra:,} VNĐ",
+                f"Còn Lại: {hoadon.ConLai:,} VNĐ"
+            ]
+
+            for text in summary_data:
+                pdf.drawString(left_margin, y, text)
+                y -= 25
 
             pdf.save()
             return response
