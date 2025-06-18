@@ -110,9 +110,9 @@ class NXBSerializer(serializers.ModelSerializer):
 
 class SachSerializer(serializers.ModelSerializer):
     MaSach = serializers.SerializerMethodField()
-    TenDauSach_input = serializers.CharField(write_only=True, required=True)
+    TenDauSach_input = serializers.CharField(write_only=True, required=False)  # Changed to not required for updates
     TenDauSach = serializers.SerializerMethodField()
-    TenNXB_input = serializers.CharField(write_only=True, required=True)
+    TenNXB_input = serializers.CharField(write_only=True, required=False)  # Changed to not required for updates
     TenNXB = serializers.SerializerMethodField()
     MaDauSach = serializers.SerializerMethodField(read_only=True)
 
@@ -161,6 +161,33 @@ class SachSerializer(serializers.ModelSerializer):
         # Create the Sach object
         sach = Sach.objects.create(MaDauSach=dausach, NXB=nxb, **validated_data)
         return sach
+
+    def update(self, instance, validated_data):
+        ten_nxb = validated_data.pop('TenNXB_input', None)
+        nam_xb = validated_data.get('NamXB', instance.NamXB)
+
+        # Validate NamXB
+        from datetime import datetime
+        current_year = datetime.now().year
+        if nam_xb < 1900 or nam_xb > current_year:
+            raise serializers.ValidationError({
+                'NamXB': f"Năm xuất bản phải từ 1900 đến {current_year}"
+            })
+
+        # Update NXB if provided
+        if ten_nxb:
+            try:
+                nxb = NXB.objects.get(TenNXB=ten_nxb)
+                instance.NXB = nxb
+            except NXB.DoesNotExist:
+                raise serializers.ValidationError({
+                    'TenNXB_input': f"Không tồn tại nhà xuất bản '{ten_nxb}'. Vui lòng thêm mới nhà xuất bản."
+                })
+
+        # Update NamXB
+        instance.NamXB = nam_xb
+        instance.save()
+        return instance
 
 class KhachHangSerializer(serializers.ModelSerializer):
     MaKhachHang = serializers.SerializerMethodField()
