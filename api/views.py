@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from django.db import IntegrityError
-
+from rest_framework.exceptions import ValidationError
 from .models import (
     KhachHang, Sach, HoaDon, CT_HoaDon, PhieuThuTien,
     DauSach, TacGia, TheLoai, NXB,
@@ -137,7 +137,6 @@ class PhieuThuTienViewSet(viewsets.ModelViewSet):
     queryset = PhieuThuTien.objects.all()
     serializer_class = PhieuThuTienSerializer
     permission_classes = [IsAuthenticated]
-    
 
     @action(detail=True, methods=['get'], url_path='export-pdf')
     def export_pdf(self, request, pk=None):
@@ -314,6 +313,27 @@ class KhachHangViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_class = KhachHangFilter
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        from .models import CT_BCCongNo, HoaDon, PhieuThuTien
+        # Kiểm tra có hóa đơn hoặc phiếu thu không
+        has_invoice = HoaDon.objects.filter(MaKH=instance).exists()
+        has_receipt = PhieuThuTien.objects.filter(MaKH=instance).exists()
+        if has_invoice or has_receipt:
+            raise ValidationError({'detail': 'Không thể xóa khách hàng vì đã có hóa đơn hoặc phiếu thu liên quan.'})
+        # Kiểm tra các dòng công nợ liên quan
+        ct_bccn_list = CT_BCCongNo.objects.filter(MaKH=instance)
+        if ct_bccn_list.exists():
+            all_zero = all(
+                (getattr(ct, 'NoDau', 0) == 0 and getattr(ct, 'PhatSinh', 0) == 0 and getattr(ct, 'NoCuoi', 0) == 0)
+                for ct in ct_bccn_list
+            )
+            if all_zero:
+                ct_bccn_list.delete()
+            else:
+                raise ValidationError({'detail': 'Không thể xóa khách hàng vì còn dòng công nợ liên quan trong báo cáo công nợ (CT_BCCongNo) có số dư khác 0.'})
+        return super().destroy(request, *args, **kwargs)
 
 # PhieuNhapSach filterset
 class PhieuNhapSachFilter(FilterSet):
