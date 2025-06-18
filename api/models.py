@@ -215,7 +215,8 @@ class HoaDon(models.Model):
             if self.SoTienTra is not None:
                 old = HoaDon.objects.get(pk=self.pk)
                 diff = self.ConLai - old.ConLai
-                self.MaKH.SoTienNo += diff          
+                self.MaKH.SoTienNo += diff
+                self.MaKH.save()          
 
             super().save(*args, **kwargs)
     
@@ -237,6 +238,10 @@ class CT_HoaDon(models.Model):
         # Update HoaDon: TongTien and ConLai
         hoadon = self.MaHD
         hoadon.save()
+
+        sach = self.MaSach
+        sach.SLTon -= self.SLBan
+        sach.save()
 
     def delete(self, *args, **kwargs):
         # Update HoaDon: TongTien and ConLai

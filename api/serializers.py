@@ -53,19 +53,16 @@ class DauSachSerializer(serializers.ModelSerializer):
     def get_TenTacGia(self, obj):
         return [tg.TenTG for tg in obj.MaTG.all()]
 
-    def create(self, validated_data):
-        ten_theloai = validated_data.pop('TenTheLoai_input', None)
-        ten_tacgia_list = validated_data.pop('TenTacGia_input', [])
-
-        # ❌ Validate TheLoai exists
+    def validate(self, data):
+        ten_theloai = data.get("TenTheLoai_input", None)
+        ten_tacgia_list = data.get("TenTacGia_input", [])
         try:
             theloai_obj = TheLoai.objects.get(TenTheLoai=ten_theloai)
         except TheLoai.DoesNotExist:
             raise serializers.ValidationError({
                 'TenTheLoai_input': f"Không tồn tại tên thể loại '{ten_theloai}'. Vui lòng thêm mới thể loại."
             })
-
-        # ❌ Validate all TacGia exist
+        
         tacgia_objs = []
         missing_tacgia = []
         for ten_tg in ten_tacgia_list:
@@ -80,13 +77,36 @@ class DauSachSerializer(serializers.ModelSerializer):
                 'TenTacGia_input': f"Không tồn tại tác giả: {[name for name in missing_tacgia]}. Vui lòng thêm mới tác giả."
             })
 
-        # ✅ Create DauSach
+        data["_resolved_theloai"] = theloai_obj
+        data["_resolved_tacgia"] = tacgia_objs
+        return data
+
+    def create(self, validated_data):
+        theloai_obj = validated_data.pop("_resolved_theloai")
+        tacgia_objs = validated_data.pop("_resolved_tacgia")
+
+        # Remove input fields
+        validated_data.pop("TenTheLoai_input", None)
+        validated_data.pop("TenTacGia_input", [])
+
         dausach = DauSach.objects.create(
             MaTheLoai=theloai_obj,
             **validated_data
         )
         dausach.MaTG.set(tacgia_objs)
         return dausach
+    
+    def update(self, instance, validated_data):
+        theloai_obj = validated_data.pop("_resolved_theloai")
+        tacgia_objs = validated_data.pop("_resolved_tacgia")
+        validated_data.pop("TenTheLoai_input", None)
+        validated_data.pop("TenTacGia_input", [])
+        tensach = validated_data.get("TenSach")
+        instance.TenSach = tensach
+        instance.MaTheLoai = theloai_obj
+        instance.MaTG.set(tacgia_objs)
+        instance.save()
+        return instance
 
 class TacGiaSerializer(serializers.ModelSerializer):
     MaTG = serializers.SerializerMethodField()
