@@ -297,6 +297,26 @@ class SachViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = SachFilter
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Kiểm tra có chi tiết hóa đơn hoặc phiếu nhap không
+        has_invoice = CT_HoaDon.objects.filter(MaSach=instance).exists()
+        has_nhapsach = CT_NhapSach.objects.filter(MaSach=instance).exists()
+        if has_invoice or has_nhapsach:
+            raise ValidationError({'detail': 'Không thể xóa sách vì đã có hóa đơn hoặc phiếu nhập liên quan.'})
+        # Kiểm tra các dòng công nợ liên quan
+        ct_bcton_list = CT_BCTon.objects.filter(MaSach=instance)
+        if ct_bcton_list.exists():
+            all_zero = all(
+                (getattr(ct, 'TonDau', 0) == 0 and getattr(ct, 'PhatSinh', 0) == 0 and getattr(ct, 'TonCuoi', 0) == 0)
+                for ct in ct_bcton_list
+            )
+            if all_zero:
+                ct_bcton_list.delete()
+            else:
+                raise ValidationError({'detail': 'Không thể xóa sách vì còn dòng báo cáo tồn có số dư khác 0.'})
+        return super().destroy(request, *args, **kwargs)
+
 class KhachHangFilter(FilterSet):
     id = NumberFilter(field_name='MaKhachHang')
     name = CharFilter(field_name='HoTen', lookup_expr='icontains')
@@ -332,7 +352,7 @@ class KhachHangViewSet(viewsets.ModelViewSet):
             if all_zero:
                 ct_bccn_list.delete()
             else:
-                raise ValidationError({'detail': 'Không thể xóa khách hàng vì còn dòng công nợ liên quan trong báo cáo công nợ (CT_BCCongNo) có số dư khác 0.'})
+                raise ValidationError({'detail': 'Không thể xóa khách hàng vì còn dòng công nợ có số dư khác 0.'})
         return super().destroy(request, *args, **kwargs)
 
 # PhieuNhapSach filterset
