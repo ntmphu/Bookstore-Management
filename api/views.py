@@ -15,7 +15,7 @@ from .serializers import (
     DauSachSerializer, TacGiaSerializer, TheLoaiSerializer, NXBSerializer,
     PhieuNhapSachSerializer, CTNhapSachSerializer,
     BaoCaoTonSerializer, CT_BCTonSerializer, BaoCaoCongNoSerializer, CT_BCCNSerializer, ThamSoSerializer,
-    
+    GroupSerializer    
 )
 
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, NumberFilter, CharFilter, DateFilter
@@ -762,3 +762,8 @@ class HoaDonViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"detail": str(e)}, status=400)
+
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    # Optionally add permissions

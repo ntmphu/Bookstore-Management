@@ -1020,3 +1020,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
         ret['role'] = self.get_group(instance)  # Replace 'group' with 'role' in output
         ret.pop('group', None)  # Remove the temporary 'group' field
         return ret
+    
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ['id', 'name']

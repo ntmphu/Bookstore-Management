@@ -5,7 +5,7 @@ from .views import (
     DauSachViewSet, TacGiaViewSet, TheLoaiViewSet, NXBViewSet,
     PhieuNhapSachViewSet, CTNhapSachViewSet,
     BaoCaoTonViewSet, CTBCTonViewSet, BaoCaoCongNoViewSet, CTBCCongNoViewSet, ThamSoViewSet,
-    UserManagementViewSet, bcton_excel, bccno_excel
+    UserManagementViewSet, bcton_excel, bccno_excel, GroupViewSet
 )
 
 router = routers.DefaultRouter()
@@ -26,7 +26,7 @@ router.register(r'ctbccongno', CTBCCongNoViewSet)
 router.register(r'thamso', ThamSoViewSet)
 router.register(r'nxb', NXBViewSet)
 router.register(r'user', UserManagementViewSet, basename='user')
-
+router.register(r'groups', GroupViewSet, basename='group')
 
 urlpatterns = [
     path('', include(router.urls)),  # include all ViewSet routes
